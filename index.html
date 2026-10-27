@@ -1536,15 +1536,10 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) { ai
 let accountUser = null, accountSyncTimer = null, accountSyncBusy = false;
 function loginWithGoogle(button) {
   if (button?.disabled) return;
-  const originalText = button?.textContent;
   if (button) { button.disabled = true; button.textContent = 'جارٍ الاتصال بـ Google…'; }
-  // Open OAuth as a user-initiated new browsing context. iOS standalone PWAs
-  // can treat same-window navigation to this endpoint as a file download.
-  const authWindow = window.open('/api/auth/google.html?redirect=1', '_blank');
-  if (!authWindow) {
-    if (button) { button.disabled = false; button.textContent = originalText || 'المتابعة باستخدام Google'; }
-    accountMessage('تعذّر فتح نافذة تسجيل الدخول. افتح الموقع في Safari وجرّب مرة أخرى.');
-  }
+  // The .html route avoids iOS treating the extensionless OAuth endpoint as a
+  // download. Navigate the current PWA context instead of opening a blank popup.
+  window.location.assign('/api/auth/google.html?redirect=1');
 }
 function openAccountModal() { openModal('account-modal'); refreshAccount(); }
 function accountMessage(message) { const el = $('account-status'); if (el) el.textContent = message; }
