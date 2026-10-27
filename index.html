@@ -322,7 +322,7 @@ body.nocoords .coord-file,body.nocoords .coord-rank{display:none}
       <input id="account-name" type="text" autocomplete="name" placeholder="الاسم (للتسجيل فقط)" style="width:100%;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);margin-bottom:10px">
       <button class="list-btn" onclick="accountSubmit('login')">تسجيل الدخول</button>
       <button class="list-btn" onclick="accountSubmit('register')">إنشاء حساب جديد</button>
-      <button class="list-btn" onclick="location.href='/api/auth/google'">المتابعة باستخدام Google</button>
+      <button class="list-btn" onclick="loginWithGoogle(this)">المتابعة باستخدام Google</button>
     </div>
     <div id="account-signed-in" hidden>
       <div id="account-user-label" style="font-weight:700;margin:12px 0"></div>
@@ -1534,6 +1534,27 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) { ai
 
 /* ===== Account system: Cloudflare Pages + D1 ===== */
 let accountUser = null, accountSyncTimer = null, accountSyncBusy = false;
+async function loginWithGoogle(button) {
+  if (button?.disabled) return;
+  const originalText = button?.textContent;
+  if (button) { button.disabled = true; button.textContent = 'جارٍ الاتصال بـ Google…'; }
+  try {
+    const response = await fetch('/api/auth/google', {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' },
+      credentials: 'same-origin',
+      cache: 'no-store',
+      redirect: 'error'
+    });
+    const data = await response.json();
+    if (!response.ok || !data.url) throw new Error(data.error || 'تعذّر بدء تسجيل الدخول.');
+    // Navigate directly to Google rather than navigating to the API endpoint itself.
+    window.location.assign(data.url);
+  } catch (error) {
+    accountMessage(error.message || 'تعذّر الاتصال بـ Google. حاول مرة أخرى.');
+    if (button) { button.disabled = false; button.textContent = originalText || 'المتابعة باستخدام Google'; }
+  }
+}
 function openAccountModal() { openModal('account-modal'); refreshAccount(); }
 function accountMessage(message) { const el = $('account-status'); if (el) el.textContent = message; }
 function renderAccount(user, stats) {
