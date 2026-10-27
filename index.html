@@ -192,6 +192,7 @@ body.nocoords .coord-file,body.nocoords .coord-rank{display:none}
 .brand{white-space:nowrap}.h-btns{flex-shrink:0}
 @media (max-width:430px){.brand span{display:none}.icon-btn{width:34px!important}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
@@ -214,6 +215,7 @@ body.nocoords .coord-file,body.nocoords .coord-rank{display:none}
         <button id="btn-black" onclick="setPlayerColor('b')">أسود</button>
       </div>
       <div class="h-btns">
+<button class="icon-btn" id="account-open-btn" onclick="openAccountModal()" aria-label="الحساب"><i class="fa-solid fa-user"></i></button>
 <button class="icon-btn" onclick="openModal('modes-modal')" aria-label="الأنماط"><i class="fa-solid fa-gamepad"></i></button>
         <button class="icon-btn" onclick="openModal('io-modal')" aria-label="استيراد"><i class="fa-solid fa-file-import"></i></button>
         <button class="icon-btn" id="btn-edit" onclick="toggleEditMode()" aria-label="تعديل"><i class="fa-solid fa-wrench"></i></button>
@@ -307,6 +309,28 @@ body.nocoords .coord-file,body.nocoords .coord-rank{display:none}
       <button class="list-btn" id="btn-toggle-ai" onclick="toggleAI()"></button>
     </div>
     <button class="close-btn" onclick="closeModal('settings-modal')">حفظ وإغلاق</button>
+  </div>
+</div>
+
+<div class="modal" id="account-modal" onclick="if(event.target===this)closeModal('account-modal')">
+  <div class="card">
+    <h3><i class="fa-solid fa-user-shield"></i> حساب iChess</h3>
+    <div id="account-status" style="color:var(--muted);font-size:13px;margin-bottom:12px">سجّل الدخول لمزامنة إعداداتك ومبارياتك بين أجهزتك.</div>
+    <div id="account-auth-fields">
+      <h4>البريد الإلكتروني</h4><input id="account-email" type="email" autocomplete="email" placeholder="name@example.com" style="width:100%;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);margin-bottom:8px">
+      <h4>كلمة المرور (10 أحرف على الأقل)</h4><input id="account-password" type="password" autocomplete="current-password" placeholder="كلمة المرور" style="width:100%;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);margin-bottom:10px">
+      <input id="account-name" type="text" autocomplete="name" placeholder="الاسم (للتسجيل فقط)" style="width:100%;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);margin-bottom:10px">
+      <button class="list-btn" onclick="accountSubmit('login')">تسجيل الدخول</button>
+      <button class="list-btn" onclick="accountSubmit('register')">إنشاء حساب جديد</button>
+      <button class="list-btn" onclick="location.href='/api/auth/google'">المتابعة باستخدام Google</button>
+    </div>
+    <div id="account-signed-in" hidden>
+      <div id="account-user-label" style="font-weight:700;margin:12px 0"></div>
+      <div id="account-stats" style="font-size:13px;color:var(--muted);margin:8px 0 14px"></div>
+      <button class="list-btn" onclick="accountSync(true)">☁️ مزامنة بيانات الحساب الآن</button>
+      <button class="list-btn" onclick="accountLogout()">تسجيل الخروج</button>
+    </div>
+    <button class="close-btn" onclick="closeModal('account-modal')">إغلاق</button>
   </div>
 </div>
 
@@ -412,7 +436,7 @@ try {
   settings = { ...settings, ...saved, ph: { ...settings.ph, ...(saved.ph || {}) } };
 } catch (e) { console.warn("Could not load settings"); }
 
-const saveSettings = () => { try { localStorage.setItem('chess_ai_settings', JSON.stringify(settings)); } catch (e) {} };
+const saveSettings = () => { try { localStorage.setItem('chess_ai_settings', JSON.stringify(settings)); } catch (e) {} if (typeof scheduleAccountSync === 'function') scheduleAccountSync(); };
 
 let selectedSquare = null;
 let isBoardFlipped = false;
@@ -1391,11 +1415,11 @@ function puzzleDone() { puzzle = null; playSound('promote'); $('coach-box').inne
 
 /* Library (local + cloud) */
 const getGames = () => { try { return JSON.parse(localStorage.getItem('chess_games') || '[]'); } catch (e) { return []; } };
-const putGames = g => { try { localStorage.setItem('chess_games', JSON.stringify(g.slice(0, 200))); localStorage.setItem('chess_games_t', Date.now()); } catch (e) {} };
+const putGames = g => { try { localStorage.setItem('chess_games', JSON.stringify(g.slice(0, 200))); localStorage.setItem('chess_games_t', Date.now()); } catch (e) {} if (typeof scheduleAccountSync === 'function') scheduleAccountSync(); };
 function saveGame(silent) {
   const pgn = game.pgn(); if (!game.history().length) return silent === true || showToast('لا توجد نقلات لحفظها');
   const g = getGames(); if (g.some(x => x.pgn === pgn)) return silent === true || showToast('محفوظة مسبقاً');
-  g.unshift({ id: Date.now().toString(36), pgn, date: Date.now(), n: game.history().length, r: game.in_checkmate() ? (game.turn() === 'w' ? '0-1' : '1-0') : '' });
+  g.unshift({ id: Date.now().toString(36), pgn, date: Date.now(), n: game.history().length, r: game.in_checkmate() ? (game.turn() === 'w' ? '0-1' : '1-0') : (game.in_draw() ? '1/2-1/2' : '') });
   putGames(g); if (silent !== true) { showToast('💾 تم الحفظ'); renderLibrary(); }
 }
 function openLibrary() { renderLibrary(); openModal('lib-modal'); }
@@ -1508,6 +1532,76 @@ setInterval(() => {
 }, 4000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { aiThinking = false; if (settings.aiEnabled) setTimeout(maybeAIPlay, 300); } });
 
+/* ===== Account system: Cloudflare Pages + D1 ===== */
+let accountUser = null, accountSyncTimer = null, accountSyncBusy = false;
+function openAccountModal() { openModal('account-modal'); refreshAccount(); }
+function accountMessage(message) { const el = $('account-status'); if (el) el.textContent = message; }
+function renderAccount(user, stats) {
+  accountUser = user || null;
+  $('account-auth-fields').hidden = !!user;
+  $('account-signed-in').hidden = !user;
+  $('account-open-btn').innerHTML = user ? '<i class="fa-solid fa-user-check"></i>' : '<i class="fa-solid fa-user"></i>';
+  if (user) {
+    $('account-user-label').textContent = (user.display_name || user.email) + ' · ' + user.email;
+    $('account-stats').textContent = stats ? `المباريات المكتملة: ${stats.completed_games || 0} · فوز: ${stats.wins || 0} · خسارة: ${stats.losses || 0} · تعادل: ${stats.draws || 0}` : 'الحساب متصل.';
+    accountMessage('تم تسجيل الدخول. ستتم مزامنة بياناتك مع هذا الحساب.');
+  } else accountMessage('سجّل الدخول لمزامنة إعداداتك ومبارياتك بين أجهزتك.');
+}
+async function refreshAccount() {
+  try { const r = await fetch('/api/auth/me', { credentials: 'same-origin', cache: 'no-store' }); const d = await r.json(); renderAccount(d.user); if (d.user) { await accountSync(false); } }
+  catch { accountMessage('تعذّر الاتصال بخدمة الحسابات.'); }
+}
+async function accountSubmit(mode) {
+  const email = $('account-email').value.trim(), password = $('account-password').value, name = $('account-name').value.trim();
+  accountMessage(mode === 'register' ? 'جارٍ إنشاء الحساب…' : 'جارٍ تسجيل الدخول…');
+  try {
+    const r = await fetch('/api/auth/' + mode, { method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email,password,name}) });
+    const d = await r.json(); if (!r.ok) throw new Error(d.error || 'تعذّر إكمال العملية.');
+    renderAccount(d.user); await syncAccountData(true); showToast(mode === 'register' ? 'تم إنشاء الحساب' : 'تم تسجيل الدخول');
+  } catch (e) { accountMessage(e.message || 'حدث خطأ.'); }
+}
+async function accountLogout() {
+  try { await fetch('/api/auth/logout', { method:'POST', credentials:'same-origin' }); } catch {}
+  accountUser = null; renderAccount(null); showToast('تم تسجيل الخروج');
+}
+function scheduleAccountSync() { if (!accountUser || accountSyncBusy) return; clearTimeout(accountSyncTimer); accountSyncTimer = setTimeout(() => accountSync(false), 20000); }
+function localAccountPayload() {
+  return { settings, games:getGames(), progress:{ learnedPositions:Object.keys(learnedDB).length }, learnedDB };
+}
+async function syncAccountData(initialUpload) {
+  if (!accountUser || accountSyncBusy) return;
+  accountSyncBusy = true;
+  try {
+    const get = await fetch('/api/account/data', { credentials:'same-origin', cache:'no-store' });
+    if (get.status === 401) { accountUser = null; renderAccount(null); return; }
+    if (!get.ok) throw new Error('load');
+    const remote = await get.json();
+    const hasRemote = Object.keys(remote.settings || {}).length || (remote.games || []).length || Object.keys(remote.learnedDB || {}).length;
+    if (initialUpload && !hasRemote) {
+      const put = await fetch('/api/account/data', { method:'PUT', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body:JSON.stringify(localAccountPayload()) });
+      if (!put.ok) throw new Error('save');
+    } else {
+      if (remote.settings && Object.keys(remote.settings).length) {
+        settings = { ...settings, ...remote.settings, ph:{ ...(settings.ph || {}), ...((remote.settings || {}).ph || {}) } };
+        try { localStorage.setItem('chess_ai_settings', JSON.stringify(settings)); } catch {}
+        buildSettingsUI();
+      }
+      const localGames = getGames(), gameMap = new Map();
+      for (const g of [...(remote.games || []), ...localGames]) if (g && g.id) { const old = gameMap.get(g.id); if (!old || (+g.date || 0) > (+old.date || 0)) gameMap.set(g.id, g); }
+      putGames([...gameMap.values()].sort((a,b)=>(+b.date||0)-(+a.date||0)).slice(0,200));
+      for (const k in (remote.learnedDB || {})) if (!(k in learnedDB)) { learnedDB[k] = remote.learnedDB[k]; dirty[k] = remote.learnedDB[k]; }
+      memN = Object.keys(learnedDB).filter(k => !isAi(k)).length; updateLearnedCountUI(); flushMem();
+      const put = await fetch('/api/account/data', { method:'PUT', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body:JSON.stringify(localAccountPayload()) });
+      if (!put.ok) throw new Error('save');
+    }
+    const fresh = await fetch('/api/account/data', { credentials:'same-origin', cache:'no-store' });
+    if (fresh.ok) { const data = await fresh.json(); renderAccount(accountUser, data.stats); }
+    accountMessage('تمت مزامنة الإعدادات والمباريات والتقدم.');
+  } catch { accountMessage('تعذّرت المزامنة حالياً. جرّب مرة أخرى عند توفر الاتصال.'); }
+  finally { accountSyncBusy = false; }
+}
+async function accountSync(manual) { if (!accountUser) return; await syncAccountData(false); if (manual && accountUser) showToast('☁️ اكتملت مزامنة الحساب'); }
+
 /* ===== Anonymous cloud sync (secret key, no account) ===== */
 const b64u = a => btoa(String.fromCharCode(...a)).replace(/[+/=]/g, c => ({ '+': '-', '/': '_', '=': '' })[c]);
 let syncKey = localStorage.getItem('chess_sync_key') || b64u(crypto.getRandomValues(new Uint8Array(24)));
@@ -1515,7 +1609,7 @@ try { localStorage.setItem('chess_sync_key', syncKey); } catch (e) {}
 let cloudT = +localStorage.getItem('chess_cloud_t') || 0, cloudTimer = null, cloudFail = 0, cloudBusy = false;
 const schedCloud = () => { clearTimeout(cloudTimer); cloudTimer = setTimeout(() => cloudSync(), 20000); };
 const _sl = saveLearningDB;
-saveLearningDB = function (k, v) { if (!isAi(k) && v && typeof v === 'object') v.t = Date.now(); _sl(k, v); schedCloud(); };
+saveLearningDB = function (k, v) { if (!isAi(k) && v && typeof v === 'object') v.t = Date.now(); _sl(k, v); schedCloud(); scheduleAccountSync(); };
 function mergeCloud(d) {
   let n = 0;
   for (const k in (d.db || {})) if (!(k in learnedDB)) { learnedDB[k] = d.db[k]; dirty[k] = d.db[k]; memN++; n++; }
@@ -1524,6 +1618,7 @@ function mergeCloud(d) {
   if (add.length) putGames([...g, ...add].sort((a, b) => b.date - a.date));
 }
 async function cloudSync(manual) {
+  if (accountUser) { if (manual) return accountSync(true); return; }
   if (cloudBusy || (cloudFail >= 3 && !manual)) return;
   cloudBusy = true; const t0 = Date.now(), up = {};
   for (const k in learnedDB) { const v = learnedDB[k]; if (!isAi(k) && (v.t || 1) > cloudT) up[k] = v; }
@@ -1543,6 +1638,9 @@ function showSyncKey() {
 document.addEventListener('visibilitychange', () => { if (document.hidden) cloudSync(); });
 
 const memReady = loadLearningDB();
+const authQuery = new URLSearchParams(location.search).get('auth');
+if (authQuery) { history.replaceState({}, '', location.pathname); setTimeout(() => showToast(authQuery === 'google_success' ? 'تم تسجيل الدخول باستخدام Google' : authQuery === 'google_link_required' ? 'هذا البريد مرتبط بحساب سابق؛ سجّل الدخول بالبريد أولاً.' : 'تعذّر تسجيل الدخول باستخدام Google'), 800); }
+fetch('/api/auth/me', { credentials:'same-origin', cache:'no-store' }).then(r=>r.json()).then(async d=>{ if (d.user) { renderAccount(d.user); memReady.then(() => syncAccountData(false)); } }).catch(()=>{});
 buildSettingsUI(); initEditPalette(); renderBoard(); updateTurnIndicator(); updateEvalBar(0);
 memReady.then(() => autoEvaluate());
 memReady.then(() => setTimeout(cloudSync, 1500));

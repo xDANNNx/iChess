@@ -8,3 +8,8 @@
 4. مشروع Pages ← Settings ← Bindings ← Add ← D1 database ← الاسم DB بالضبط ← chess-ai.
 5. Deployments ← Retry deployment.
 استبدل YOUR-DOMAIN.pages.dev في index.html و robots.txt و sitemap.xml بدومينك.
+
+## نظام الحسابات (نسخة تجريبية)
+
+أُضيفت واجهة حسابات بالبريد وكلمة المرور وGoogle مع Cloudflare Pages Functions وD1.
+راجع `AUTH_SETUP.md` لخطوات إعداد Google OAuth وترحيل قاعدة D1. إذا كانت قاعدة `chess-ai` موجودة مسبقاً، نفّذ `schema-auth.sql` بعد أخذ نسخة احتياطية؛ لا تستبدل قاعدة البيانات ولا تحذف جدول `sync`.

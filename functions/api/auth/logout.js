@@ -1,0 +1,2 @@
+import { json, cookie, sha256, sameOrigin } from '../../_lib/auth.js';
+export async function onRequestPost({ request, env }) { if (!sameOrigin(request)) return json({ error: 'طلب غير مسموح.' }, 403); const token = cookie(request, 'ichess_session'); if (/^[a-f0-9]{64}$/.test(token)) await env.DB.prepare('DELETE FROM sessions WHERE id_hash=?').bind(await sha256(token)).run(); return json({ ok: true }, 200, { 'Set-Cookie': 'ichess_session=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax' }); }
