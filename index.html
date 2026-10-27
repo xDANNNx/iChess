@@ -1539,7 +1539,7 @@ function loginWithGoogle(button) {
   if (button) { button.disabled = true; button.textContent = 'جارٍ الاتصال بـ Google…'; }
   // The .html route avoids iOS treating the extensionless OAuth endpoint as a
   // download. Navigate the current PWA context instead of opening a blank popup.
-  window.location.assign('/api/auth/google.html?redirect=1');
+  window.location.assign('/api/auth/google');
 }
 function openAccountModal() { openModal('account-modal'); refreshAccount(); }
 function accountMessage(message) { const el = $('account-status'); if (el) el.textContent = message; }
