@@ -34,6 +34,13 @@ export async function onRequestGet({ request, env }) {
   headers.append('Set-Cookie', cookieHeader('ichess_oauth_state', state, 600));
   headers.append('Set-Cookie', cookieHeader('ichess_oauth_nonce', nonce, 600));
 
+  // For explicit top-level navigation from the installed iOS web app, use a real
+  // HTTP redirect instead of serving a document whose URL ends in /google.
+  if (new URL(request.url).searchParams.get('redirect') === '1') {
+    headers.set('Location', target.toString());
+    return new Response(null, { status: 302, headers });
+  }
+
   // The installed iOS web app can mis-handle navigation to this endpoint as a file.
   // Return the OAuth URL to the app so it can navigate directly to Google's domain.
   if (new URL(request.url).searchParams.get('redirect') !== '1' && request.headers.get('Accept')?.includes('application/json')) {
