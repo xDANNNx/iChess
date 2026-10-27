@@ -262,6 +262,40 @@ button:focus-visible, .icon-btn:focus-visible, .tool-btn:focus-visible {
 .arrows { z-index: 7; }
 .checkmate-overlay { z-index: 30; }
 
+
+/* Gentle motion polish: lively, calm, and respectful of reduced-motion settings. */
+@keyframes board-breathe {
+  0%,100% { box-shadow: 0 10px 28px rgba(0,0,0,.18), 0 0 0 1px rgba(255,255,255,.035); }
+  50% { box-shadow: 0 12px 32px rgba(0,0,0,.2), 0 0 18px rgba(116,169,126,.09), 0 0 0 1px rgba(255,255,255,.07); }
+}
+.board-container { animation: board-breathe 7s ease-in-out infinite; }
+@keyframes panel-enter {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.panel, .coach-box { animation: panel-enter 360ms cubic-bezier(.2,.7,.2,1) both; }
+button, .icon-btn, .tool-btn {
+  transition: transform 160ms cubic-bezier(.2,.7,.2,1), box-shadow 180ms ease, filter 180ms ease, background-color 180ms ease;
+}
+button:hover, .icon-btn:hover, .tool-btn:hover { filter: brightness(1.06); }
+button:active, .icon-btn:active, .tool-btn:active { transform: scale(.965); }
+.sq .piece { transition: filter 180ms ease; }
+.sq:hover .piece { filter: drop-shadow(0 2px 2px rgba(0,0,0,.16)); }
+.sq.sq-selected { animation: selected-breathe 1.5s ease-in-out infinite; }
+@keyframes selected-breathe {
+  0%,100% { box-shadow: inset 0 0 0 2px rgba(255,255,255,.18); }
+  50% { box-shadow: inset 0 0 0 3px rgba(255,255,255,.38); }
+}
+.toast, .toast-message { animation: toast-enter 240ms cubic-bezier(.18,.8,.25,1) both; }
+@keyframes toast-enter {
+  from { opacity: 0; transform: translateY(8px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .board-container, .panel, .coach-box, .sq.sq-selected, .toast, .toast-message { animation: none !important; }
+  button, .icon-btn, .tool-btn, .sq .piece { transition: none !important; }
+}
+
 </style>
 </head>
 <body>
