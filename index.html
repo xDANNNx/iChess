@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Chess AI">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#101216">
+<title>شطرنج Chess AI — تحليل ذكي، العب ضد الذكاء الاصطناعي، ألغاز يومية</title>
+<meta name="description" content="موقع شطرنج مجاني بالعربية: تحليل فوري بمحرك قوي، أفضل النقلات والأسهم، شرح لغوي للنقلات، لعب ضد الذكاء الاصطناعي بستة مستويات، لغز يومي، وحفظ دراستك سحابياً.">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<link rel="canonical" href="https://YOUR-DOMAIN.pages.dev/">
+<meta property="og:type" content="website"><meta property="og:locale" content="ar_AR"><meta property="og:title" content="Chess AI — شطرنج وتحليل ذكي">
+<meta property="og:description" content="حلّل نقلاتك، العب ضد الذكاء الاصطناعي، وحل اللغز اليومي. يعمل كتطبيق على الآيفون والآيباد."><meta property="og:image" content="https://YOUR-DOMAIN.pages.dev/icons/icon-512.png">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Chess AI","applicationCategory":"GameApplication","operatingSystem":"Any","inLanguage":"ar","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/icons/icon-192.png">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin><link rel="preconnect" href="https://upload.wikimedia.org" crossorigin><link rel="preconnect" href="https://lichess.org" crossorigin>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+<style>
+:root {
+  --bg: #101216; --panel: #181b21; --raise: #232832; --line: #2d3340;
+  --text: #f1f3f7; --muted: #98a2b3; --brass: #e0b04a; --brass-d: #b98d2c;
+  --blue: #5b9bf0; --red: #ef5350; --light: #ebecd0; --dark: #779556;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Arabic", Tahoma, Roboto, sans-serif; overscroll-behavior: none; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, .sq:focus-visible { outline: 2px solid var(--brass); outline-offset: -2px; }
+.app-container { display: flex; flex-direction: column; height: 100dvh; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+.main-area { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.header { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 4px 10px; background: var(--panel); border-bottom: 1px solid var(--line); flex-shrink: 0; z-index: 10; height: 42px; }
+.brand { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 14px; }
+.brand svg { width: 24px; height: 24px; border-radius: 6px; }
+.brand small { display: none; color: var(--muted); font-weight: 500; }
+.h-btns { display: flex; gap: 1px; align-items: center; }
+.icon-btn { background: none; border: 0; color: var(--muted); font-size: 14px; width: 32px; height: 32px; border-radius: 8px; }
+.icon-btn:hover, .icon-btn.active { background: var(--raise); color: var(--brass); }
+.seg { display: flex; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 2px; }
+.seg button { background: none; border: 0; border-radius: 999px; padding: 3px 10px; font-size: 11.5px; font-weight: 700; color: var(--muted); }
+.seg button.active { background: var(--raise); color: var(--text); }
+.palette { display: none; gap: 4px; padding: 4px 8px; background: var(--panel); overflow-x: auto; align-items: center; direction: ltr; flex-shrink: 0; z-index: 10; }
+.palette.show { display: flex; }
+.palette-piece { width: 30px; height: 30px; flex: none; border-radius: 6px; background: var(--bg) center/82% no-repeat; border: 1px solid transparent; }
+.palette-piece.selected { border-color: var(--brass); background-color: var(--raise); }
+.tool-btn { flex: none; width: 30px; height: 30px; border-radius: 6px; border: 0; background: var(--bg); color: var(--muted); }
+.tool-btn.danger { color: var(--red); }
+.stage { flex: 1; display: flex; align-items: center; justify-content: center; padding: 6px; min-height: 0; min-width: 0; gap: 6px; overflow: hidden; }
+.eval-bar-vertical { width: 16px; background: #15171b; border-radius: 4px; position: relative; overflow: hidden; display: flex; flex-direction: column-reverse; border: 1px solid var(--line); flex-shrink: 0; height: 100%; max-height: 100%; }
+#eval-white-vert { background: #f0f0f0; width: 100%; transition: height 0.2s ease-out; height: 50%; }
+#eval-black-vert { background: #15171b; width: 100%; flex: 1; }
+.eval-text-vert { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-90deg); font-size: 9px; font-weight: 900; color: #fff; mix-blend-mode: difference; text-shadow: 0 1px 2px #000; pointer-events: none; white-space: nowrap; }
+.board-container { width: 100%; max-width: 100%; max-height: 100%; aspect-ratio: 1 / 1; position: relative; border-radius: 6px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,.5); direction: ltr; background: var(--light); flex-shrink: 0; margin: auto; }
+.board { display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); width: 100%; height: 100%; }
+.sq { position: relative; display: flex; align-items: center; justify-content: center; background-color: var(--light); width: 100%; height: 100%; }
+.sq.dark { background-color: var(--dark); }
+.sq.sq-brilliant { background-color: #1baca6 !important; }
+.sq.sq-great { background-color: #5b9bf0 !important; }
+.sq.sq-best { background-color: #95bb4a !important; }
+.sq.sq-good { background-color: #95bb4a !important; }
+.sq.sq-book { background-color: #a88865 !important; }
+.sq.sq-inaccuracy { background-color: #f7c631 !important; }
+.sq.sq-mistake { background-color: #e6912c !important; }
+.sq.sq-blunder { background-color: #ca3431 !important; }
+.sq.sq-miss { background-color: #ff7769 !important; }
+.sq.sq-forced { background-color: #81b64c !important; }
+.sq.sq-checkmate { background-color: #ca3431 !important; }
+.sq[class*="sq-"]::before { content: ''; position: absolute; inset: 0; background-color: inherit; opacity: 0.5; z-index: 1; }
+.sq[class*="sq-"]::after { content: ''; position: absolute; inset: 0; background-color: #000; mix-blend-mode: overlay; opacity: 0.2; z-index: 1; }
+@keyframes checkPulse { 0% { box-shadow: inset 0 0 0 0 rgba(239, 83, 80, 0.8); background-color: rgba(239, 83, 80, 0.4); } 50% { box-shadow: inset 0 0 20px 10px rgba(239, 83, 80, 0.8); background-color: rgba(239, 83, 80, 0.6); } 100% { box-shadow: inset 0 0 0 0 rgba(239, 83, 80, 0.8); background-color: rgba(239, 83, 80, 0.4); } }
+.sq.sq-in-check { animation: checkPulse 1s infinite alternate; z-index: 3; }
+.sq.sq-in-check .piece { filter: drop-shadow(0 0 8px red); }
+.checkmate-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.75); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 50; backdrop-filter: blur(3px); border-radius: 6px; }
+.checkmate-overlay.show { display: flex; animation: fadeIn 0.4s ease-out; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.checkmate-icon { font-size: 70px; color: #FFD700; animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-shadow: 0 0 20px rgba(255, 215, 0, 0.6); }
+@keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+.checkmate-text { font-size: 26px; font-weight: 900; color: white; margin-top: 15px; text-shadow: 0 2px 5px rgba(0,0,0,0.8); letter-spacing: 1px; }
+.checkmate-subtext { font-size: 16px; font-weight: 600; color: var(--brass); margin-top: 5px; }
+.piece { width: 90%; height: 90%; background: center/contain no-repeat; pointer-events: none; z-index: 2; filter: drop-shadow(0 1px 1px rgba(0,0,0,.25)); will-change: transform; }
+.coord-file, .coord-rank { position: absolute; font-size: clamp(7px, 1.9cqw, 11px); font-weight: 700; opacity: .7; pointer-events: none; z-index: 15; }
+.coord-file { bottom: 1px; right: 3px; }
+.coord-rank { top: 1px; left: 3px; }
+.sq .coord-file, .sq .coord-rank { color: var(--dark); }
+.sq.dark .coord-file, .sq.dark .coord-rank { color: var(--light); }
+.move-dot { position: absolute; width: 30%; height: 30%; border-radius: 50%; background: rgba(20,30,10,.28); pointer-events: none; z-index: 5; }
+.capture-ring { position: absolute; inset: 4%; border-radius: 50%; border: max(3px, .8cqw) solid rgba(20,30,10,.28); pointer-events: none; z-index: 5; }
+@keyframes flash-error { 50% { background-color: rgba(239,83,80,.7); } }
+.sq.error { animation: flash-error .25s 2; }
+.arrows { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+.move-badge-overlay { position: absolute; top: -8%; left: -8%; width: 45%; height: 45%; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2cqw; color: #fff; font-weight: 900; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; z-index: 20; box-shadow: 0 2px 5px rgba(0,0,0,0.5); pointer-events: none; border: 2px solid rgba(255,255,255,0.9); transform: translate(-10%, -10%); }
+.badge-brilliant { background: #1baca6; border-color: #fff; font-size: 2.5cqw; }
+.badge-great { background: #5b9bf0; }
+.badge-best { background: #95bb4a; }
+.badge-good { background: #95bb4a; }
+.badge-book { background: #a88865; font-size: 2cqw; }
+.badge-inaccuracy { background: #f7c631; color: #333;}
+.badge-mistake { background: #e6912c; }
+.badge-blunder { background: #ca3431; }
+.badge-miss { background: #ff7769; }
+.badge-forced { background: #81b64c; }
+.badge-checkmate { background: #ca3431; }
+.panel { display: flex; flex-direction: column; gap: 6px; padding: 6px 10px 10px; background: var(--panel); border-radius: 16px 16px 0 0; border-top: 1px solid var(--line); flex-shrink: 0; height: 180px; z-index: 10; width: 100%; }
+.top-panel-row { display: flex; justify-content: space-between; align-items: center; height: 18px; }
+.move-history { font-size: 10.5px; color: var(--muted); white-space: nowrap; overflow-x: auto; direction: ltr; scrollbar-width: none; flex: 1; padding-right: 8px; }
+.move-history b { color: var(--text); font-weight: 600; }
+.move-history:empty { display: none; }
+.material-bar { display: flex; gap: 4px; font-size: 11px; font-weight: 800; flex-shrink: 0; }
+.mat-white { color: #f1f3f7; }
+.mat-black { color: #a0aab5; }
+.meta-chips { display: flex; gap: 4px; flex-wrap: nowrap; overflow-x: auto; height: 20px; align-items: center; }
+.chip { font-size: 9.5px; font-weight: 700; color: var(--muted); background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 2px 6px; white-space: nowrap; }
+.chip:empty { display: none; }
+.chip.tappable { cursor: pointer; border-color: var(--brass); }
+.coach-box { background: #1e2126; border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font-size: 11.5px; line-height: 1.4; color: var(--text); overflow-y: auto; height: 52px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); word-wrap: break-word; flex-shrink: 0; }
+.coach-box strong { color: var(--brass); }
+.coach-box .mate-alert { color: #ef5350; font-weight: 800; }
+.btn-analyze { display: flex; align-items: center; justify-content: center; gap: 6px; border: 0; border-radius: 8px; padding: 8px; font-size: 14px; font-weight: 800; background: linear-gradient(var(--brass), var(--brass-d)); color: #1b1405; width: 100%; height: 38px; flex-shrink: 0; }
+.btn-analyze:active { filter: brightness(.92); }
+.btn-analyze:disabled { opacity: .7; }
+.controls-row { display: flex; gap: 6px; height: 38px; flex-shrink: 0; }
+.btn-sec { flex: 1; background: var(--raise); border: 0; border-radius: 8px; padding: 6px; font-size: 13px; color: var(--text); }
+.btn-sec:active { background: var(--line); }
+.turn-indicator { flex: 2.2; display: flex; align-items: center; justify-content: center; gap: 6px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; font-size: 11.5px; font-weight: 700; padding: 6px; }
+.turn-indicator.tappable { border-color: var(--brass); cursor: pointer; }
+.turn-dot { width: 8px; height: 8px; border-radius: 50%; border: 1px solid #777; }
+.spinner { width: 12px; height: 12px; border: 2px solid rgba(0,0,0,.25); border-top-color: #1b1405; border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,.65); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
+.modal.show { display: flex; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px; width: 100%; max-width: 380px; max-height: 92dvh; overflow: auto; }
+.card h3 { margin: 0 0 12px; font-size: 17px; color: var(--brass); }
+.card h4 { margin: 14px 0 7px; font-size: 13px; color: var(--muted); }
+.list-btn { display: flex; justify-content: space-between; align-items: center; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; font-size: 14px; font-weight: 700; text-align: start; gap: 10px; width: 100%; margin-bottom: 6px; }
+.list-btn span { font-size: 11px; font-weight: 500; color: var(--muted); text-align: end; }
+.list-btn.active { border-color: var(--brass); color: var(--brass); background: rgba(224,176,74,.08); }
+.themes-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.themes-grid button { width: 100%; height: auto; aspect-ratio: 1; border-radius: 8px; border: 2px solid var(--line); padding: 0; }
+.themes-grid button.active { border-color: var(--brass); }
+.close-btn { width: 100%; margin-top: 16px; padding: 12px; border: 0; border-radius: 8px; background: var(--brass); color: #1b1405; font-weight: 800; font-size: 15px; }
+.promo-row { display: flex; gap: 8px; justify-content: center; direction: ltr; }
+.promo-row button { width: 56px; height: 56px; border-radius: 10px; border: 1px solid var(--line); background: var(--raise) center/80% no-repeat; }
+.toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 150px); transform: translate(-50%, 10px); background: #000d; color: #fff; padding: 8px 14px; border-radius: 999px; font-size: 12px; font-weight: 600; opacity: 0; pointer-events: none; transition: .25s; z-index: 60; max-width: 90vw; text-align: center; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.io-textarea { width: 100%; height: 70px; background: var(--bg); border: 1px solid var(--line); color: var(--text); padding: 10px; border-radius: 8px; font-family: monospace; resize: none; direction: ltr; }
+.io-btns { display: flex; gap: 8px; margin-top: 10px; }
+.io-btn { flex: 1; padding: 8px; background: var(--raise); border: 1px solid var(--line); border-radius: 6px; font-size: 13px; font-weight: 600; }
+.io-btn:active { background: var(--line); }
+.board { touch-action: none; }
+.ghost-piece { position: fixed; pointer-events: none; z-index: 40; background: center/contain no-repeat; filter: drop-shadow(0 8px 10px rgba(0,0,0,.5)); transform: translate(-50%, -50%) scale(1.1); }
+.sq.hover-highlight { box-shadow: inset 0 0 0 3px rgba(255,255,255,.75); }
+@media (min-width: 700px) and (min-aspect-ratio: 1/1) {
+  .app-container { flex-direction: row; direction: ltr; }
+  .main-area { display: flex; flex-direction: column; flex: 1; height: 100%; direction: rtl; }
+  .header, .palette { width: 100%; }
+  .stage { height: calc(100dvh - 42px); padding: 16px; }
+  .panel { width: 340px; height: 100dvh; border-radius: 0; border-top: 0; border-left: 1px solid var(--line); justify-content: center; gap: 12px; padding: 20px; direction: rtl; }
+  .brand small { display: inline; }
+  .toast { bottom: 40px; }
+}
+/* ===== v2: polish, Apple/iPad, themes ===== */
+[data-ui=light]{--bg:#eef0f4;--panel:#fff;--raise:#e6e9ef;--line:#d5d9e2;--text:#1b1f27;--muted:#5d6675}
+input,textarea{-webkit-user-select:text;user-select:text;font-size:16px}
+body{-webkit-touch-callout:none;-webkit-text-size-adjust:100%}
+.app-container{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+.stage{container-type:size}
+.board-container{width:min(100cqw - 24px,100cqh);height:auto;container-type:inline-size;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.06)}
+.eval-bar-vertical{height:min(100cqh,100cqw - 24px)}
+.sq.last-move{box-shadow:inset 0 0 0 100px rgba(255,214,10,.30)}
+.sq.selected{box-shadow:inset 0 0 0 100px rgba(80,160,255,.38)}
+.piece{transition:transform .18s cubic-bezier(.25,.8,.25,1);filter:none;will-change:auto}
+.panel{height:auto;min-height:206px;background:linear-gradient(180deg,var(--panel),color-mix(in srgb,var(--panel) 88%,#000))}
+.coach-box{height:70px}
+.coach-box .ln{display:inline-block;margin:3px 3px 0 0;padding:2px 7px;border:1px solid var(--line);border-radius:999px;font-size:10.5px;direction:ltr;cursor:pointer;background:var(--bg)}
+.coach-box .ln b{color:var(--brass)}
+.btn-analyze{box-shadow:0 4px 14px rgba(224,176,74,.28);transition:transform .1s}.btn-analyze:active{transform:scale(.98)}
+body.nocoords .coord-file,body.nocoords .coord-rank{display:none}
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mode-grid button{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px 8px;font-weight:800;font-size:13px;display:flex;flex-direction:column;gap:6px;align-items:center}
+.mode-grid button i{font-size:22px;color:var(--brass)}.mode-grid button small{font-weight:500;color:var(--muted);font-size:10.5px}
+.auth-in{width:100%;margin-bottom:8px;padding:11px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);direction:ltr}
+.game-row{display:flex;gap:6px;margin-bottom:6px}.game-row .list-btn{margin:0;flex:1}.game-row .del{width:42px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--red)}
+@media (pointer:coarse){.icon-btn{width:38px;height:38px;font-size:16px}.header{height:48px}}
+@media (min-width:768px) and (max-aspect-ratio:1/1){.panel{height:auto;min-height:250px;padding:12px 24px 20px}.coach-box{height:96px;font-size:14px}.btn-analyze,.controls-row{height:46px}.chip{font-size:11.5px}.move-history{font-size:13px}.card{max-width:460px}}
+@media (min-width:700px) and (min-aspect-ratio:1/1){.panel{width:min(380px,32vw);height:100dvh;overflow-y:auto}.coach-box{height:130px;font-size:13.5px}.stage{height:calc(100dvh - 48px)}.sq:hover{filter:brightness(1.07)}}
+.brand{white-space:nowrap}.h-btns{flex-shrink:0}
+@media (max-width:430px){.brand span{display:none}.icon-btn{width:34px!important}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  <div class="main-area">
+    <header class="header">
+      <div class="brand">
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <rect width="64" height="64" fill="#101216"/>
+          <path d="M8 8h24v24H8zM32 32h24v24H32z" fill="#779556"/>
+          <path d="M32 8h24v24H32zM8 32h24v24H8z" fill="#ebecd0"/>
+          <path d="M16 50 46 18" stroke="#e0b04a" stroke-width="6" stroke-linecap="round"/>
+          <path d="M34 14h18v18z" fill="#e0b04a"/>
+        </svg>
+        <span>Chess AI <small>تحليل</small></span>
+      </div>
+      <div class="seg">
+        <button id="btn-white" class="active" onclick="setPlayerColor('w')">أبيض</button>
+        <button id="btn-black" onclick="setPlayerColor('b')">أسود</button>
+      </div>
+      <div class="h-btns">
+<button class="icon-btn" onclick="openModal('modes-modal')" aria-label="الأنماط"><i class="fa-solid fa-gamepad"></i></button>
+        <button class="icon-btn" onclick="openModal('io-modal')" aria-label="استيراد"><i class="fa-solid fa-file-import"></i></button>
+        <button class="icon-btn" id="btn-edit" onclick="toggleEditMode()" aria-label="تعديل"><i class="fa-solid fa-wrench"></i></button>
+        <button class="icon-btn" onclick="openModal('settings-modal')" aria-label="إعدادات"><i class="fa-solid fa-gear"></i></button>
+        <button class="icon-btn" onclick="resetGame()" aria-label="لعبة جديدة"><i class="fa-solid fa-rotate-right"></i></button>
+      </div>
+    </header>
+
+    <div class="palette" id="edit-palette">
+      <button class="tool-btn danger" onclick="deleteSelectedPiece()" aria-label="حذف"><i class="fa-solid fa-trash"></i></button>
+      <button class="tool-btn" onclick="clearBoard()" aria-label="مسح"><i class="fa-solid fa-broom"></i></button>
+      <span style="flex:1"></span>
+    </div>
+
+    <main class="stage">
+      <div class="eval-bar-vertical" id="vertical-eval-container">
+        <div id="eval-white-vert"></div>
+        <div id="eval-black-vert"></div>
+        <div class="eval-text-vert" id="eval-text-vert">0.0</div>
+      </div>
+      <div class="board-container" id="board-container">
+        <div class="board" id="board"></div>
+        <svg class="arrows" viewBox="0 0 8 8">
+          <defs>
+            <marker id="arrow-gold" markerWidth="3" markerHeight="3" refX="1.2" refY="1.5" orient="auto"><path d="M0 0 3 1.5 0 3z" fill="#FFD700"/></marker>
+            <marker id="arrow-blue" markerWidth="3" markerHeight="3" refX="1.2" refY="1.5" orient="auto"><path d="M0 0 3 1.5 0 3z" fill="#5b9bf0"/></marker>
+          </defs>
+          <line id="arrow-alt" stroke="#5b9bf0" stroke-width=".16" stroke-linecap="round" marker-end="url(#arrow-blue)" opacity=".85" style="display:none"/>
+          <line id="arrow-best" stroke="#FFD700" stroke-width=".2" stroke-linecap="round" marker-end="url(#arrow-gold)" opacity=".92" style="display:none"/>
+        </svg>
+        <div class="checkmate-overlay" id="checkmate-overlay">
+          <i class="fa-solid fa-crown checkmate-icon"></i>
+          <div class="checkmate-text">كش مات!</div>
+          <div class="checkmate-subtext" id="checkmate-winner-text">فاز الأبيض</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <section class="panel">
+    <div class="top-panel-row">
+      <div class="move-history" id="move-history"></div>
+      <div class="material-bar" id="material-bar">
+        <span class="mat-white" id="mat-white"></span>
+        <span class="mat-black" id="mat-black"></span>
+      </div>
+    </div>
+    <div class="meta-chips">
+      <span class="chip tappable" id="chip-phase" onclick="cyclePhase()"></span>
+      <span class="chip tappable" id="chip-style" onclick="openModal('settings-modal')"></span>
+      <span class="chip" id="chip-opening"></span>
+    </div>
+    <div class="coach-box" id="coach-box">جاري قراءة الموقف...</div>
+    <button class="btn-analyze" id="btn-analyze" onclick="analyzePosition()">
+      <i class="fa-solid fa-bolt"></i>
+      <span id="btn-analyze-text">أفضل نقلة</span>
+    </button>
+    <div class="controls-row">
+      <button class="btn-sec" onclick="undoMove()"><i class="fa-solid fa-arrow-right"></i></button>
+      <button class="btn-sec" onclick="flipBoard()"><i class="fa-solid fa-arrows-rotate"></i></button>
+      <div class="turn-indicator" id="turn-indicator" onclick="toggleTurnInEditMode()"></div>
+    </div>
+  </section>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal" id="settings-modal" onclick="if(event.target===this)closeModal('settings-modal')">
+  <div class="card">
+    <h3><i class="fa-solid fa-robot"></i> إعدادات الذكاء الاصطناعي</h3>
+    <div style="background:var(--raise); padding:10px; border-radius:8px; margin-bottom:12px; text-align:center; border:1px solid var(--brass);">
+      <i class="fa-solid fa-brain" style="color:var(--brass); font-size:20px; margin-bottom:5px;"></i>
+      <div style="font-size:13px; font-weight:bold;">الوضعيات التي تعلمها التطبيق</div>
+      <div id="learned-count" style="font-size:20px; font-weight:900; color:var(--brass);">0</div>
+    </div>
+    <h4>مستوى القوة</h4>
+    <div id="settings-levels"></div>
+    <h4>اعتماد المرحلة (اختيار يدوي)</h4>
+    <div id="settings-phase"></div>
+    <h4>أسلوب أساطير الشطرنج</h4>
+    <div id="settings-styles"></div>
+    <h4>المظهر والخيارات</h4><div id="settings-extra"></div>
+    <h4>شكل الرقعة</h4>
+    <div class="themes-grid" id="settings-themes"></div>
+    <h4>الصوت والاهتزاز</h4>
+    <div>
+      <button class="list-btn" id="btn-toggle-sound" onclick="toggleSound()"></button>
+      <button class="list-btn" id="btn-toggle-haptic" onclick="toggleHaptic()"></button>
+    </div>
+    <h4>الخصم (الذكاء الاصطناعي)</h4>
+    <div>
+      <button class="list-btn" id="btn-toggle-ai" onclick="toggleAI()"></button>
+    </div>
+    <button class="close-btn" onclick="closeModal('settings-modal')">حفظ وإغلاق</button>
+  </div>
+</div>
+
+<div class="modal" id="io-modal" onclick="if(event.target===this)closeModal('io-modal')">
+  <div class="card">
+    <h3><i class="fa-solid fa-file-import"></i> استيراد وتصدير</h3>
+    <h4>تنسيق FEN</h4>
+    <textarea class="io-textarea" id="fen-input" placeholder="ألصق كود FEN هنا..."></textarea>
+    <div class="io-btns">
+      <button class="io-btn" onclick="copyFEN()">نسخ FEN</button>
+      <button class="io-btn" onclick="loadFEN()">تحميل FEN</button>
+    </div>
+    <h4>تنسيق PGN</h4>
+    <textarea class="io-textarea" id="pgn-input" placeholder="ألصق نقلات PGN هنا..."></textarea>
+    <div class="io-btns">
+      <button class="io-btn" onclick="copyPGN()">نسخ PGN</button>
+      <button class="io-btn" onclick="loadPGN()">تحميل PGN</button>
+    </div>
+    <button class="close-btn" onclick="closeModal('io-modal')">إغلاق</button>
+  </div>
+</div>
+
+<div class="modal" id="promo-modal">
+  <div class="card">
+    <h3>ترقية الجندي إلى:</h3>
+    <div class="promo-row" id="promo-options"></div>
+  </div>
+</div>
+
+<div class="modal" id="modes-modal" onclick="if(event.target===this)closeModal('modes-modal')"><div class="card">
+<h3><i class="fa-solid fa-gamepad"></i> أنماط اللعب</h3>
+<div class="mode-grid">
+<button onclick="setMode('free')"><i class="fa-solid fa-magnifying-glass-chart"></i>تحليل حر<small>العب الطرفين وتعلّم</small></button>
+<button onclick="setMode('ai')"><i class="fa-solid fa-robot"></i>ضد الذكاء<small>6 مستويات</small></button>
+<button onclick="startDaily()"><i class="fa-solid fa-puzzle-piece"></i>اللغز اليومي<small>من Lichess</small></button>
+<button onclick="closeModal('modes-modal');openLibrary()"><i class="fa-solid fa-book-open"></i>مكتبتي<small>مبارياتي المحفوظة</small></button>
+</div><button class="close-btn" onclick="closeModal('modes-modal')">إغلاق</button></div></div>
+<div class="modal" id="lib-modal" onclick="if(event.target===this)closeModal('lib-modal')"><div class="card">
+<h3><i class="fa-solid fa-book-open"></i> مكتبتي</h3>
+<button class="list-btn" onclick="saveGame()">💾 حفظ المباراة الحالية<span>محلياً + سحابياً إن سجّلت</span></button>
+<div id="lib-list"></div><button class="close-btn" onclick="closeModal('lib-modal')">إغلاق</button></div></div>
+
+<div class="toast" id="toast-msg"></div>
+
+<script>
+/* =========================================
+   1. Core Setup & State
+   ========================================= */
+const $ = id => document.getElementById(id);
+const game = new Chess();
+
+const PIECE_IMAGES = {
+  p: 'c/c7/Chess_pdt45', n: 'e/ef/Chess_ndt45', b: '9/98/Chess_bdt45', r: 'f/ff/Chess_rdt45', q: '4/47/Chess_qdt45', k: 'f/f0/Chess_kdt45',
+  P: '4/45/Chess_plt45', N: '7/70/Chess_nlt45', B: 'b/b1/Chess_blt45', R: '7/72/Chess_rlt45', Q: '1/15/Chess_qlt45', K: '4/42/Chess_klt45'
+};
+const getPieceImage = p => `url(https://upload.wikimedia.org/wikipedia/commons/${PIECE_IMAGES[p]}.svg)`;
+const PIECE_NAMES_AR = { p: 'الجندي', n: 'الحصان', b: 'الفيل', r: 'القلعة', q: 'الوزير', k: 'الملك' };
+const PIECE_VALUES = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+
+/* ← المستويات معدّلة: كل مستوى له عمق بحث خاص به، والخبير كامل القوة */
+const LEVELS = [
+  [1,  'مبتدئ',  '~400 Elo | أخطاء بشرية كثيرة',         1],
+  [2,  'هاوي',   '~800 Elo | أخطاء متكررة',         2],
+  [4,  'متوسط',  '~1200 Elo | يخطئ أحياناً',         4],
+  [8,  'جيد',    '~1600 Elo | زلّات نادرة',         8],
+  [12, 'محترف',  '~2000 Elo | دقيق جداً',        12],
+  [18, 'خبير',   '~2400 Elo | قريب من المحترفين',   18]
+];
+
+const THEMES = [
+  ["أخضر كلاسيكي", "#eeeed2", "#769656"], ["خشب دافئ", "#f0d9b5", "#b58863"], ["أزرق رمادي", "#dee3e6", "#8ca2ad"],
+  ["بنفسجي", "#e8e0f0", "#8877b3"], ["رخام", "#e9e9ea", "#9aa0a8"], ["قرميدي", "#f3e1d3", "#c0724f"],
+  ["زيتوني", "#f2f0d0", "#8a9a5b"], ["بحري", "#dcefef", "#4f9a9a"], ["وردي", "#fbe6ec", "#d78aa0"],
+  ["ذهبي", "#f6ecc9", "#c9a24b"], ["رملي", "#efe4d0", "#a68a64"], ["فحمي", "#8e949c", "#3d424a"],
+  ["ليلي", "#6c7aa0", "#2b3558"], ["أحمر داكن", "#e8cfc8", "#8b3a3a"], ["نعناعي", "#e6f5ec", "#58b88a"]
+];
+
+const PHASES = [
+  ['auto', 'تلقائي', 'حسب الوضعية'],
+  ['o', 'الافتتاحيات', 'أعتمدها يدوياً'],
+  ['m', 'منتصف اللعبة', 'أعتمدها يدوياً'],
+  ['e', 'نهاية اللعبة', 'أعتمدها يدوياً']
+];
+
+const STYLES = {
+  off: { n: 'بدون أسلوب', d: 'أفضل نقلة رياضية' },
+  mate: { n: 'هجوم كش', d: 'تطوير سريع وضغط مبكر', tol: 150, w: { chk: 3, att: 3, sac: .6, trd: -1, cen: 1, dev: 2, res: 1 } },
+  morphy: { n: 'بول مورفي', d: 'تطوير سريع وفتح اللعبة', tol: 120, w: { chk: 1, att: 1.5, sac: .3, trd: -.5, cen: 2, dev: 3, res: .5 } },
+  tal: { n: 'ميخائيل تال', d: 'تضحيات هجومية', tol: 180, w: { chk: 2, att: 3, sac: 1.2, trd: -1.5, dev: 1, res: 1 } },
+  kasparov: { n: 'غاري كاسباروف', d: 'مبادرة وضغط متواصل', tol: 90, w: { chk: 1, att: 2, sac: .5, cen: 1.5, dev: 2, res: 1, adv: 1 } },
+  fischer: { n: 'بوبي فيشر', d: 'مبادئ نقية وتحويل واضح', tol: 60, w: { cen: 2, dev: 2.5, chk: .5, att: 1 } },
+  capa: { n: 'كابابلانكا', d: 'بساطة وتبادلات', tol: 50, w: { trd: 2, cen: 1, res: 1, sac: -1 } },
+  karpov: { n: 'كاربوف', d: 'خنق تدريجي وتقييد', tol: 50, w: { res: 3, trd: 1, cen: 1, att: .5, sac: -1 } },
+  carlsen: { n: 'كارلسن', d: 'ضغط هادئ في النهايات', tol: 50, w: { res: 2, trd: 1, adv: 1, att: .5, sac: -.5 } }
+};
+
+let settings = {
+  level: 18, theme: 0, sound: true, vol: 0.7, haptic: true, phase: 'auto', style: 'off', ph: { o: true, m: true, e: true }, aiEnabled: false
+};
+
+try {
+  const saved = JSON.parse(localStorage.getItem('chess_ai_settings') || '{}');
+  settings = { ...settings, ...saved, ph: { ...settings.ph, ...(saved.ph || {}) } };
+} catch (e) { console.warn("Could not load settings"); }
+
+const saveSettings = () => { try { localStorage.setItem('chess_ai_settings', JSON.stringify(settings)); } catch (e) {} };
+
+let selectedSquare = null;
+let isBoardFlipped = false;
+let playerColor = 'w';
+let isEditMode = false;
+let selectedPalettePiece = null;
+let lastMove = null;
+let bestMoveData = null;
+let isAnalyzing = false;
+let autoEvalTimeout = null;
+let previousEval = 0;
+let lastMoveClassification = null;
+let aiThinking = false;
+
+let learnedDB = {};
+let activeAbortController = null;
+
+function loadLearningDB() {
+  try {
+    const saved = localStorage.getItem('chess_ai_learned_db');
+    if (saved) learnedDB = JSON.parse(saved);
+  } catch (e) { console.warn("Failed to load learning DB"); }
+  updateLearnedCountUI();
+}
+function saveLearningDB(fen, result) {
+  learnedDB[fen] = result;
+  try { localStorage.setItem('chess_ai_learned_db', JSON.stringify(learnedDB)); } catch (e) {}
+  updateLearnedCountUI();
+}
+function updateLearnedCountUI() {
+  const el = $('learned-count');
+  if (el) el.textContent = Object.keys(learnedDB).length;
+}
+
+/* =========================================
+   2. Haptic & Audio
+   ========================================= */
+const HAPTIC_PATTERNS = {
+  light: [10], move: [15], capture: [25], check: [15, 40, 15], castle: [10, 20, 10], promote: [20, 40], illegal: [40, 60, 40], end: [50, 50, 50, 50], medium: [20]
+};
+function triggerHaptic(type) {
+  if (!settings.haptic || !navigator.vibrate) return;
+  try { navigator.vibrate(HAPTIC_PATTERNS[type] || 10); } catch (e) {}
+}
+
+let audioCtx = null;
+let masterGain = null;
+function initAudio() {
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      masterGain = audioCtx.createGain();
+      const comp = audioCtx.createDynamicsCompressor();
+      masterGain.connect(comp); comp.connect(audioCtx.destination);
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    masterGain.gain.value = settings.vol;
+    return audioCtx;
+  } catch (e) { return null; }
+}
+function playNoise(ctx, time, duration, freq, q, vol) {
+  const bufferSize = Math.floor(ctx.sampleRate * duration);
+  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 3);
+  const src = ctx.createBufferSource(); src.buffer = buffer;
+  const filter = ctx.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = freq; filter.Q.value = q;
+  const gain = ctx.createGain(); gain.gain.value = vol;
+  src.connect(filter); filter.connect(gain); gain.connect(masterGain); src.start(time);
+}
+function playTone(ctx, time, duration, freqStart, freqEnd, vol, type = 'sine') {
+  const osc = ctx.createOscillator(); const gain = ctx.createGain();
+  osc.type = type; osc.frequency.setValueAtTime(freqStart, time);
+  if (freqEnd && freqEnd !== freqStart) osc.frequency.exponentialRampToValueAtTime(freqEnd, time + duration);
+  gain.gain.setValueAtTime(vol, time); gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+  osc.connect(gain); gain.connect(masterGain); osc.start(time); osc.stop(time + duration + 0.02);
+}
+const PIECE_WEIGHT = { p: 1.1, n: 1, b: .97, r: .92, q: .88, k: .8 };
+
+function playSound(type, moveObj) {
+  triggerHaptic(type);
+  if (!settings.sound || settings.vol <= 0) return;
+  const ctx = initAudio(); if (!ctx) return;
+  const t = ctx.currentTime + 0.005;
+  const weight = ((moveObj && PIECE_WEIGHT[moveObj.piece]) || 1) * (0.97 + Math.random() * 0.06);
+  const playTap = (offset, vol) => { playNoise(ctx, t + offset, 0.07, 1700 * weight, 1.4, 0.9 * vol); playTone(ctx, t + offset, 0.09, 230 * weight, 95 * weight, 0.8 * vol); };
+  switch (type) {
+    case 'move': playTap(0, 1); break;
+    case 'capture': playNoise(ctx, t, 0.12, 1100 * weight, 0.9, 1.2); playTone(ctx, t, 0.14, 170 * weight, 60 * weight, 1); playTap(0.045, 0.9); break;
+    case 'check': playTap(0, 1); playTone(ctx, t + 0.04, 0.22, 988, 988, 0.25, 'triangle'); playTone(ctx, t + 0.04, 0.22, 1318, 1318, 0.12, 'triangle'); break;
+    case 'castle': playTap(0, 1); playTap(0.1, 0.9); break;
+    case 'promote': playTap(0, 0.8); [523, 659, 784, 1047].forEach((f, i) => playTone(ctx, t + 0.08 + i * 0.07, 0.25, f, f, 0.22, 'triangle')); break;
+    case 'end': playTap(0, 1); [392, 330, 262].forEach((f, i) => { playTone(ctx, t + 0.15 + i * 0.2, 0.9, f, f * 0.99, 0.3); playTone(ctx, t + 0.15 + i * 0.2, 0.6, f * 2, f * 2, 0.1); }); break;
+    case 'illegal': playTone(ctx, t, 0.09, 130, 110, 0.25, 'square'); playTone(ctx, t + 0.11, 0.09, 130, 110, 0.25, 'square'); break;
+  }
+}
+
+function playMoveSound(move) {
+  if (game.in_checkmate()) return playSound('end', move);
+  if (game.in_stalemate() || game.in_draw()) return playSound('draw', move);
+  playSound(move.promotion ? 'promote' : game.in_check() ? 'check' : move.captured ? 'capture' : /[kq]/.test(move.flags) ? 'castle' : 'move', move);
+}
+
+document.addEventListener('pointerdown', () => initAudio(), { once: true });
+let toastTimeout;
+function showToast(msg) {
+  triggerHaptic('light');
+  const t = $('toast-msg'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimeout); toastTimeout = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+/* =========================================
+   3. Board Rendering
+   ========================================= */
+const FILES = 'abcdefgh';
+const RANKS = '87654321';
+
+function getKingSquare(color) {
+  const board = game.board();
+  for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) {
+    const p = board[r][f];
+    if (p && p.type === 'k' && p.color === color) return FILES[f] + RANKS[r];
+  }
+  return null;
+}
+function isCastlingTarget(legalMoves, square) {
+  return legalMoves.some(m => /[kq]/.test(m.flags) && m.to[1] === square[1] && ((m.flags.includes('k') && square[0] === 'h') || (m.flags.includes('q') && square[0] === 'a')));
+}
+
+function getMoveBadgeInfo(type) {
+  switch (type) {
+    case 'brilliant': return { icon: '!!', cssClass: 'sq-brilliant', badgeClass: 'badge-brilliant' };
+    case 'great': return { icon: '!', cssClass: 'sq-great', badgeClass: 'badge-great' };
+    case 'best': return { icon: '★', cssClass: 'sq-best', badgeClass: 'badge-best' };
+    case 'excellent': return { icon: '✔️', cssClass: 'sq-good', badgeClass: 'badge-good' };
+    case 'good': return { icon: '✔️', cssClass: 'sq-good', badgeClass: 'badge-good' };
+    case 'book': return { icon: '📖', cssClass: 'sq-book', badgeClass: 'badge-book' };
+    case 'inaccuracy': return { icon: '?!', cssClass: 'sq-inaccuracy', badgeClass: 'badge-inaccuracy' };
+    case 'mistake': return { icon: '?', cssClass: 'sq-mistake', badgeClass: 'badge-mistake' };
+    case 'blunder': return { icon: '??', cssClass: 'sq-blunder', badgeClass: 'badge-blunder' };
+    case 'miss': return { icon: '❌', cssClass: 'sq-miss', badgeClass: 'badge-miss' };
+    case 'forced': return { icon: '➡️', cssClass: 'sq-forced', badgeClass: 'badge-forced' };
+    case 'checkmate': return { icon: '👑', cssClass: 'sq-checkmate', badgeClass: 'badge-checkmate' };
+    default: return { icon: '', cssClass: '', badgeClass: '' };
+  }
+}
+
+function renderBoard() {
+  try {
+    const boardEl = $('board');
+    if (boardEl.children.length !== 64) { boardEl.innerHTML = ''; for (let i = 0; i < 64; i++) boardEl.appendChild(document.createElement('div')); }
+    const legalMoves = (!isEditMode && selectedSquare) ? game.moves({ square: selectedSquare, verbose: true }) : [];
+    const targets = new Set(legalMoves.map(m => m.to));
+    const checkSquare = game.in_check() ? getKingSquare(game.turn()) : null;
+    const info = (lastMove && lastMoveClassification) ? getMoveBadgeInfo(lastMoveClassification.type) : null;
+    for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) {
+      const file = isBoardFlipped ? FILES[7 - f] : FILES[f], rank = isBoardFlipped ? RANKS[7 - r] : RANKS[r];
+      const square = file + rank, piece = game.get(square), el = boardEl.children[r * 8 + f];
+      const isTo = !!(info && lastMove.to === square);
+      let c = 'sq' + ((r + f) % 2 ? ' dark' : '');
+      if (isTo && info.cssClass) c += ' ' + info.cssClass;
+      if (lastMove && (square === lastMove.from || square === lastMove.to)) c += ' last-move';
+      if (square === selectedSquare) c += ' selected';
+      if (square === checkSquare) c += ' sq-in-check';
+      const mark = targets.has(square) ? (piece ? 'c' : 'd') : (isCastlingTarget(legalMoves, square) ? 'c' : '');
+      const pk = piece ? (piece.color === 'w' ? piece.type.toUpperCase() : piece.type) : '';
+      const lr = r === 7 ? file : '', lf = f === 0 ? rank : '';
+      const badge = isTo && info.badgeClass ? info.badgeClass + info.icon : '';
+      const sig = [square, c, pk, mark, badge, lr, lf].join('|');
+      if (el._s === sig) continue;
+      el._s = sig; el.className = c; el.dataset.square = square; el.innerHTML = '';
+      if (lr) { const l = document.createElement('span'); l.className = 'coord-rank'; l.innerText = lr; el.appendChild(l); }
+      if (lf) { const l = document.createElement('span'); l.className = 'coord-file'; l.innerText = lf; el.appendChild(l); }
+      if (piece) { const p = document.createElement('i'); p.className = 'piece'; p.style.backgroundImage = getPieceImage(pk); el.appendChild(p); }
+      if (badge) { const b = document.createElement('div'); b.className = 'move-badge-overlay ' + info.badgeClass; b.innerHTML = info.icon; el.appendChild(b); }
+      if (mark) { const d = document.createElement('i'); d.className = mark === 'c' ? 'capture-ring' : 'move-dot'; el.appendChild(d); }
+    }
+    updateMaterialBar();
+  } catch (e) { console.error(e); $('board').innerHTML = ''; }
+}
+
+function updateMaterialBar() {
+  let whiteScore = 0, blackScore = 0;
+  game.board().forEach(row => row.forEach(p => {
+    if (p) { if (p.color === 'w') whiteScore += PIECE_VALUES[p.type]; else blackScore += PIECE_VALUES[p.type]; }
+  }));
+  const diff = whiteScore - blackScore;
+  if (diff > 0) { $('mat-white').innerText = `+${diff}`; $('mat-black').innerText = ``; }
+  else if (diff < 0) { $('mat-white').innerText = ``; $('mat-black').innerText = `+${Math.abs(diff)}`; }
+  else { $('mat-white').innerText = `=`; $('mat-black').innerText = `=`; }
+}
+
+/* =========================================
+   4. Coaching UI
+   ========================================= */
+function clearAnalysis() {
+  bestMoveData = null;
+  $('arrow-best').style.display = 'none';
+  $('arrow-alt').style.display = 'none';
+}
+
+function generateCoachExplanation(fen, score, mateIn, bestMoveUci) {
+  const coachBox = $('coach-box');
+  const g = new Chess(fen);
+  let html = "";
+  if (mateIn !== null && Math.abs(mateIn) <= 7) {
+    const winner = mateIn > 0 ? 'الأبيض' : 'الأسود';
+    const loser = mateIn > 0 ? 'الأسود' : 'الأبيض';
+    html = `<strong class="mate-alert">🚨 إنذار كش مات!</strong> ${loser} في موقف ميؤوس منه. ${winner} يمكنه إماتة الملك خلال <strong>${Math.abs(mateIn)}</strong> نقلات كحد أقصى.`;
+    coachBox.innerHTML = html;
+    return;
+  }
+  const absScore = Math.abs(score);
+  const advSide = score > 0 ? 'الأبيض' : 'الأسود';
+  const disSide = score > 0 ? 'الأسود' : 'الأبيض';
+  if (absScore > 5) html += `<strong>👑 سيطرة ساحقة لـ${advSide}:</strong> الفارق المادي كبير. ${disSide} يعاني من انهيار في الدفاع.`;
+  else if (absScore > 1.5) html += `<strong>📈 أفضلية واضحة لـ${advSide}:</strong> ${advSide} يمتلك قطعاً أنشط وسيطرة أفضل على المركز.`;
+  else if (absScore > 0.3) html += `<strong>⚖️ أفضلية طفيفة لـ${advSide}:</strong> الموقف متقارب، لكن ${advSide} يمتلك مبادرة خفيفة.`;
+  else html += `<strong>🤝 توازن تام:</strong> الموقف متكافئ. المعركة الآن على من سيرتكب الخطأ الأول.`;
+  if (bestMoveUci) {
+    try {
+      const move = g.move({ from: bestMoveUci.slice(0, 2), to: bestMoveUci.slice(2, 4), promotion: bestMoveUci[4] || 'q' });
+      if (move) {
+        let effect = "";
+        if (g.in_checkmate()) effect = "تسبب كش مات فوري.";
+        else if (g.in_check()) effect = "تضع ملك الخصم تحت كش مباشر.";
+        else if (move.captured) effect = `تأكل قطعة ${PIECE_NAMES_AR[move.captured]} مهمة.`;
+        else effect = "تزيد الضغط على معسكر الخصم.";
+        html += `<br>💡 <strong>التأثير:</strong> (${move.san}) ${effect}`;
+      }
+    } catch(e) {}
+  }
+  coachBox.innerHTML = html;
+}
+
+function flashErrorSquare(square) {
+  triggerHaptic('illegal');
+  const sq = document.querySelector(`[data-square="${square}"]`);
+  if (sq) { sq.classList.remove('error'); void sq.offsetWidth; sq.classList.add('error'); }
+  playSound('illegal');
+}
+
+$('board').addEventListener('click', e => { const sq = e.target.closest('.sq'); if (sq) handleSquareTap(sq.dataset.square); });
+
+function handleSquareTap(square) {
+  clearAnalysis();
+  const piece = game.get(square);
+  if (isEditMode) {
+    if (selectedPalettePiece) {
+      const ok = game.put({ type: selectedPalettePiece.toLowerCase(), color: selectedPalettePiece === selectedPalettePiece.toUpperCase() ? 'w' : 'b' }, square);
+      if (!ok) showToast('يُسمح بملك واحد فقط لكل لون');
+      unselectPalette();
+    } else if (selectedSquare && selectedSquare !== square) { const p = game.get(selectedSquare); if (p) { game.remove(selectedSquare); game.put(p, square); } selectedSquare = null; }
+    else { selectedSquare = piece ? square : null; }
+    return renderBoard();
+  }
+  if (selectedSquare) {
+    if (selectedSquare === square) { selectedSquare = null; return renderBoard(); }
+    const moves = game.moves({ square: selectedSquare, verbose: true });
+    const movingPiece = game.get(selectedSquare);
+    let move = moves.find(x => x.to === square);
+    if (!move && piece && piece.type === 'r' && piece.color === game.turn() && movingPiece && movingPiece.type === 'k') {
+      move = moves.find(x => x.to[1] === square[1] && ((x.flags.includes('k') && square[0] === 'h') || (x.flags.includes('q') && square[0] === 'a')));
+    }
+    if (move) {
+      if (move.flags.includes('p')) { const from = selectedSquare; askPromotion(move.color).then(promo => executeMove(from, move.to, promo)); return; }
+      return executeMove(selectedSquare, move.to, 'q');
+    }
+    flashErrorSquare(square);
+    selectedSquare = (piece && piece.color === game.turn()) ? square : null;
+    return renderBoard();
+  }
+  if (piece) {
+    if (piece.color === game.turn()) {
+      selectedSquare = square;
+      triggerHaptic('light');
+      renderBoard();
+    } else { flashErrorSquare(square); }
+  }
+}
+
+function executeMove(from, to, promo) {
+  const startEl = document.querySelector(`[data-square="${from}"] .piece`);
+  const startRect = startEl ? startEl.getBoundingClientRect() : null;
+  const move = game.move({ from, to, promotion: promo || 'q' });
+  if (!move) return;
+  playMoveSound(move);
+  lastMove = { from, to };
+  selectedSquare = null;
+  clearAnalysis();
+  let materialScore = 0;
+  game.board().forEach(row => row.forEach(p => { if (p) materialScore += (p.color === 'w' ? 1 : -1) * (PIECE_VALUES[p.type] || 0); }));
+  let localEval = materialScore / 10;
+  lastMoveClassification = null;
+  renderBoard();
+  updateTurnIndicator();
+  updateEvalBar(localEval, null);
+  if (puzzle) puzzleCheck(move); else autoEvaluate(true, move);
+  if (startRect) {
+    const endEl = document.querySelector(`[data-square="${to}"] .piece`);
+    if (endEl) {
+      const endRect = endEl.getBoundingClientRect();
+      const dx = startRect.left - endRect.left;
+      const dy = startRect.top - endRect.top;
+      endEl.style.transition = 'none'; endEl.style.transform = `translate(${dx}px, ${dy}px)`;
+      void endEl.offsetWidth;
+      endEl.style.transition = 'transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)';
+      endEl.style.transform = 'translate(0, 0)';
+      setTimeout(() => { if (endEl) endEl.style.transition = ''; }, 200);
+    }
+  }
+  // ← تشغيل الذكاء الاصطناعي بعد نقلة اللاعب
+  if (settings.aiEnabled && !isEditMode && !puzzle) {
+    setTimeout(maybeAIPlay, 600);
+  }
+}
+
+function askPromotion(color) {
+  return new Promise(resolve => {
+    triggerHaptic('light');
+    const options = $('promo-options');
+    options.innerHTML = ['q', 'r', 'b', 'n'].map(type => `<button data-type="${type}" style="background-image:${getPieceImage(color === 'w' ? type.toUpperCase() : type)}" aria-label="${PIECE_NAMES_AR[type]}"></button>`).join('');
+    options.onclick = e => { const btn = e.target.closest('button'); if (btn) { closeModal('promo-modal'); resolve(btn.dataset.type); } };
+    openModal('promo-modal');
+  });
+}
+
+/* Drag & Drop */
+(function setupDragAndDrop() {
+  const boardEl = $('board');
+  let dragState = null, ghostEl = null, ignoreNextClick = false;
+  const getSquareAt = (x, y) => { const el = document.elementFromPoint(x, y); const sq = el && el.closest ? el.closest('.sq') : null; return sq ? sq.dataset.square : null; };
+  const clearHighlights = () => document.querySelectorAll('.sq.hover-highlight').forEach(el => el.classList.remove('hover-highlight'));
+  function cleanupDrag() {
+    window.removeEventListener('pointermove', onPointerMove); window.removeEventListener('pointerup', onPointerUp); window.removeEventListener('pointercancel', onPointerCancel);
+    if (ghostEl) { ghostEl.remove(); ghostEl = null; } clearHighlights(); dragState = null; document.querySelectorAll('.piece').forEach(p => p.style.opacity = '');
+  }
+  function onPointerMove(e) {
+    if (!dragState || e.pointerId !== dragState.id) return;
+    if (!dragState.isDragging) {
+      if (Math.hypot(e.clientX - dragState.startX, e.clientY - dragState.startY) < 6) return;
+      dragState.isDragging = true;
+      triggerHaptic('light');
+      if (selectedSquare !== dragState.square) { selectedSquare = dragState.square; clearAnalysis(); renderBoard(); }
+      const sqEl = document.querySelector(`[data-square="${dragState.square}"]`);
+      const pieceEl = sqEl ? sqEl.querySelector('.piece') : null;
+      const width = sqEl ? sqEl.getBoundingClientRect().width : 48;
+      ghostEl = document.createElement('div'); ghostEl.className = 'ghost-piece';
+      ghostEl.style.width = width + 'px'; ghostEl.style.height = width + 'px'; ghostEl.style.backgroundImage = dragState.pieceImg;
+      document.body.appendChild(ghostEl); if (pieceEl) pieceEl.style.opacity = '0';
+    }
+    ghostEl.style.left = e.clientX + 'px'; ghostEl.style.top = e.clientY + 'px';
+    clearHighlights(); const targetSq = getSquareAt(e.clientX, e.clientY);
+    if (targetSq) { const targetEl = document.querySelector(`[data-square="${targetSq}"]`); if (targetEl) targetEl.classList.add('hover-highlight'); }
+    e.preventDefault();
+  }
+  function onPointerUp(e) {
+    if (!dragState || e.pointerId !== dragState.id) return;
+    const wasDragging = dragState.isDragging; const fromSq = dragState.square;
+    const toSq = wasDragging ? getSquareAt(e.clientX, e.clientY) : null;
+    cleanupDrag(); if (!wasDragging) return;
+    ignoreNextClick = true; setTimeout(() => { ignoreNextClick = false; }, 60);
+    if (toSq && toSq !== fromSq) {
+      selectedSquare = fromSq;
+      const moves = game.moves({ square: fromSq, verbose: true });
+      const targetPiece = game.get(toSq); const movingPiece = game.get(fromSq);
+      let move = moves.find(x => x.to === toSq);
+      if (!move && targetPiece && targetPiece.type === 'r' && targetPiece.color === game.turn() && movingPiece && movingPiece.type === 'k') {
+        move = moves.find(x => x.to[1] === toSq[1] && ((x.flags.includes('k') && toSq[0] === 'h') || (x.flags.includes('q') && toSq[0] === 'a')));
+      }
+      if (move) {
+        if (move.flags.includes('p')) askPromotion(move.color).then(promo => executeMove(fromSq, toSq, promo));
+        else executeMove(fromSq, toSq, 'q');
+      } else { renderBoard(); flashErrorSquare(toSq); }
+    } else { renderBoard(); }
+  }
+  function onPointerCancel() { if (!dragState) return; const wasDragging = dragState.isDragging; cleanupDrag(); if (wasDragging) renderBoard(); }
+  boardEl.addEventListener('pointerdown', e => {
+    if (isEditMode || dragState || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    const sqEl = e.target.closest('.sq'); if (!sqEl) return;
+    const square = sqEl.dataset.square; const piece = game.get(square);
+    if (!piece || piece.color !== game.turn()) return;
+    dragState = { id: e.pointerId, square, startX: e.clientX, startY: e.clientY, isDragging: false, pieceImg: getPieceImage(piece.color === 'w' ? piece.type.toUpperCase() : piece.type) };
+    window.addEventListener('pointermove', onPointerMove, { passive: false }); window.addEventListener('pointerup', onPointerUp); window.addEventListener('pointercancel', onPointerCancel);
+  });
+  boardEl.addEventListener('click', e => { if (ignoreNextClick) { e.stopPropagation(); e.stopImmediatePropagation(); } }, true);
+})();
+
+/* =========================================
+   5. UI Updates
+   ========================================= */
+function updateTurnIndicator() {
+  setTimeout(updatePhaseDisplay, 0);
+  const isWhite = game.turn() === 'w';
+  let text = '';
+  if (game.in_checkmate()) text = `كش مات! فاز ${isWhite ? 'الأسود' : 'الأبيض'}`;
+  else if (game.in_stalemate()) text = 'تعادل: جمود';
+  else if (game.insufficient_material()) text = 'تعادل: مادة ناقصة';
+  else if (game.in_threefold_repetition()) text = 'تعادل: تكرار';
+  else if (game.in_draw()) text = 'تعادل: 50 نقلة';
+  else text = (isWhite ? 'دور الأبيض' : 'دور الأسود') + (game.in_check() ? ' · كش!' : '');
+  const indicator = $('turn-indicator');
+  indicator.classList.toggle('tappable', isEditMode);
+  indicator.innerHTML = `<i class="turn-dot" style="background:${isWhite ? '#fff' : '#222'}"></i>${text}`;
+  const mateOverlay = $('checkmate-overlay');
+  if (game.in_checkmate()) {
+    $('checkmate-winner-text').innerText = isWhite ? 'فاز الأسود' : 'فاز الأبيض';
+    mateOverlay.classList.add('show');
+  } else { mateOverlay.classList.remove('show'); }
+}
+
+function updateEvalBar(score, mateIn = null) {
+  let percentWhite = 50; let displayText = "0.0";
+  if (mateIn !== null) { percentWhite = score > 0 ? 100 : 0; displayText = (score > 0 ? '' : '-') + 'M' + Math.abs(mateIn); }
+  else { percentWhite = Math.max(2, Math.min(98, 50 + Math.max(-10, Math.min(10, score)) * 5)); displayText = (score > 0 ? '+' : '') + score.toFixed(1); }
+  $('eval-white-vert').style.height = percentWhite + '%';
+  $('eval-text-vert').textContent = displayText;
+}
+
+const PHASE_NAMES_AR = { o: 'الافتتاح', m: 'منتصف اللعبة', e: 'نهاية اللعبة' };
+function getCurrentPhase() {
+  if (settings.phase !== 'auto') return settings.phase;
+  let totalMaterial = 0; let queens = 0;
+  game.board().forEach(row => row.forEach(p => { if (p && p.type !== 'p' && p.type !== 'k') { totalMaterial += PIECE_VALUES[p.type]; if (p.type === 'q') queens++; } }));
+  const moveCount = parseInt(game.fen().split(' ')[5]) || 1;
+  if (totalMaterial <= 16 || (queens === 0 && totalMaterial <= 26)) return 'e';
+  return moveCount <= 10 && totalMaterial >= 50 ? 'o' : 'm';
+}
+
+function updatePhaseDisplay() {
+  renderMoveHistory();
+  const phase = getCurrentPhase();
+  $('chip-phase').textContent = 'المرحلة: ' + PHASE_NAMES_AR[phase] + (settings.phase !== 'auto' ? ' (يدوي)' : '') + (settings.ph[phase] ? '' : ' (معطّلة)');
+  $('chip-style').textContent = settings.style !== 'off' ? '🎭 ' + STYLES[settings.style].n : '';
+  $('chip-opening').textContent = '';
+}
+
+function renderMoveHistory() {
+  const history = game.history();
+  const el = $('move-history');
+  if (!history.length) { el.innerHTML = ''; return; }
+  const turn = game.turn(); const fullMove = parseInt(game.fen().split(' ')[5]) || 1;
+  let moveNum = turn === 'w' ? fullMove - 1 : fullMove; let col = turn === 'w' ? 'b' : 'w';
+  const moves = [];
+  for (let i = history.length - 1; i >= 0; i--) { moves.push({ num: moveNum, col, san: history[i] }); if (col === 'w') { col = 'b'; moveNum--; } else col = 'w'; }
+  moves.reverse();
+  el.innerHTML = moves.map((m, i) => m.col === 'w' ? `<b>${m.num}.</b> ${m.san}` : (i === 0 ? `<b>${m.num}…</b> ${m.san}` : m.san)).join(' ');
+  el.scrollLeft = 1e6;
+}
+
+function cyclePhase() {
+  triggerHaptic('light');
+  const order = ['auto', 'o', 'm', 'e'];
+  settings.phase = order[(order.indexOf(settings.phase) + 1) % 4];
+  saveSettings(); clearAnalysis(); updatePhaseDisplay(); buildSettingsUI();
+  showToast('المرحلة: ' + (settings.phase === 'auto' ? 'تلقائي' : PHASE_NAMES_AR[settings.phase]));
+}
+
+/* =========================================
+   6. Settings & Modals
+   ========================================= */
+function openModal(id) { triggerHaptic('light'); $(id).classList.add('show'); }
+function closeModal(id) { triggerHaptic('light'); $(id).classList.remove('show'); }
+
+function buildSettingsUI() {
+  if (!THEMES[settings.theme]) settings.theme = 0;
+  settings.ph = Object.assign({ o: true, m: true, e: true }, settings.ph || {});
+  $('settings-levels').innerHTML = LEVELS.map(l => `<button class="list-btn ${settings.level === l[0] ? 'active' : ''}" data-l="${l[0]}">${l[1]}<span>${l[2]}</span></button>`).join('');
+  $('settings-levels').onclick = e => { const btn = e.target.closest('button'); if (btn) { triggerHaptic('light'); settings.level = +btn.dataset.l; saveSettings(); buildSettingsUI(); if (settings.aiEnabled) setTimeout(maybeAIPlay, 200); } };
+  if (!STYLES[settings.style]) settings.style = 'off';
+  if (!['auto', 'o', 'm', 'e'].includes(settings.phase)) settings.phase = 'auto';
+  $('settings-phase').innerHTML = PHASES.map(p => `<button class="list-btn ${settings.phase === p[0] ? 'active' : ''}" data-k="${p[0]}">${p[1]}<span>${p[2]}</span></button>`).join('');
+  $('settings-phase').onclick = e => { const btn = e.target.closest('button'); if (btn) { triggerHaptic('light'); settings.phase = btn.dataset.k; saveSettings(); clearAnalysis(); buildSettingsUI(); updatePhaseDisplay(); } };
+  $('settings-styles').innerHTML = Object.keys(STYLES).map(k => `<button class="list-btn ${settings.style === k ? 'active' : ''}" data-k="${k}">${STYLES[k].n}<span>${STYLES[k].d}</span></button>`).join('');
+  $('settings-styles').onclick = e => { const btn = e.target.closest('button'); if (btn) { triggerHaptic('light'); settings.style = btn.dataset.k; saveSettings(); clearAnalysis(); buildSettingsUI(); updatePhaseDisplay(); } };
+  $('settings-themes').innerHTML = THEMES.map((t, i) => `<button class="${settings.theme === i ? 'active' : ''}" data-i="${i}" aria-label="${t[0]}" style="background:linear-gradient(135deg,${t[1]} 50%,${t[2]} 50%)"></button>`).join('');
+  $('settings-themes').onclick = e => { const btn = e.target.closest('button'); if (btn) { triggerHaptic('light'); settings.theme = +btn.dataset.i; saveSettings(); buildSettingsUI(); } };
+  $('btn-toggle-sound').innerHTML = settings.sound ? 'الصوت: مفعّل <span>اضغط للإيقاف</span>' : 'الصوت: متوقف <span>اضغط للتفعيل</span>';
+  $('btn-toggle-haptic').innerHTML = settings.haptic ? 'الاهتزاز: مفعّل <span>على الجوال</span>' : 'الاهتزاز: متوقف <span>اضغط للتفعيل</span>';
+  const aiBtn = $('btn-toggle-ai');
+  if (aiBtn) {
+    const lvlName = (LEVELS.find(l => l[0] === settings.level) || LEVELS[0])[1];
+    aiBtn.innerHTML = settings.aiEnabled
+      ? `الخصم: مفعّل <span>المستوى: ${lvlName}</span>`
+      : `الخصم: متوقف <span>اضغط للتفعيل</span>`;
+  }
+  const theme = THEMES[settings.theme];
+  document.documentElement.style.setProperty('--light', theme[1]);
+  document.documentElement.style.setProperty('--dark', theme[2]);
+}
+function toggleSound() { triggerHaptic('light'); settings.sound = !settings.sound; saveSettings(); buildSettingsUI(); playSound('move'); }
+function toggleHaptic() { settings.haptic = !settings.haptic; saveSettings(); buildSettingsUI(); if (settings.haptic) triggerHaptic('light'); }
+
+/* =========================================
+   7. Edit Mode & I/O
+   ========================================= */
+function initEditPalette() {
+  const palette = $('edit-palette');
+  'KQRBNPkqrbnp'.split('').forEach(p => {
+    const btn = document.createElement('button'); btn.className = 'palette-piece';
+    btn.style.backgroundImage = getPieceImage(p); btn.setAttribute('aria-label', PIECE_NAMES_AR[p.toLowerCase()]);
+    btn.onclick = () => { triggerHaptic('light'); const wasSelected = selectedPalettePiece === p; unselectPalette(); if (!wasSelected) { selectedPalettePiece = p; btn.classList.add('selected'); } selectedSquare = null; renderBoard(); };
+    palette.insertBefore(btn, palette.querySelector('.tool-btn'));
+  });
+}
+function unselectPalette() { selectedPalettePiece = null; document.querySelectorAll('.palette-piece').forEach(el => el.classList.remove('selected')); }
+function deleteSelectedPiece() { if (selectedSquare) { triggerHaptic('medium'); game.remove(selectedSquare); selectedSquare = null; renderBoard(); } else showToast('اضغط على قطعة في الرقعة أولاً'); }
+function clearBoard() { triggerHaptic('light'); game.clear(); selectedSquare = null; lastMove = null; lastMoveClassification = null; renderBoard(); updateTurnIndicator(); autoEvaluate(); }
+function setFen(fn) { const p = game.fen().split(' '); fn(p); p[2] = getCastlingRights(p[0]); p[3] = '-'; return game.load(p.join(' ')); }
+function getCastlingRights(boardStr) {
+  const rows = boardStr.split('/'); const expand = x => x.replace(/\d/g, n => '.'.repeat(+n));
+  const wRow = expand(rows[7]), bRow = expand(rows[0]); let rights = '';
+  if (wRow[4] === 'K') { if (wRow[7] === 'R') rights += 'K'; if (wRow[0] === 'R') rights += 'Q'; }
+  if (bRow[4] === 'k') { if (bRow[7] === 'r') rights += 'k'; if (bRow[0] === 'r') rights += 'q'; }
+  return rights || '-';
+}
+function validatePosition() {
+  const board = game.board(); const kings = { w: [], b: [] }; const counts = { w: 0, b: 0 }; const pawns = { w: 0, b: 0 };
+  for (let r = 0; r < 8; r++) { for (let f = 0; f < 8; f++) { const p = board[r][f]; if (!p) continue; counts[p.color]++; if (p.type === 'k') kings[p.color].push([f, r]); if (p.type === 'p') { pawns[p.color]++; if (r === 0 || r === 7) return 'لا يجوز وضع جندي في الصف الأول أو الثامن'; } } }
+  if (kings.w.length !== 1 || kings.b.length !== 1) return 'يجب وجود ملك أبيض واحد وملك أسود واحد';
+  for (const c of ['w', 'b']) { if (counts[c] > 16) return 'أكثر من 16 قطعة للون الواحد'; if (pawns[c] > 8) return 'أكثر من 8 جنود للون الواحد'; }
+  if (Math.max(Math.abs(kings.w[0][0] - kings.b[0][0]), Math.abs(kings.w[0][1] - kings.b[0][1])) < 2) return 'الملكان متجاوران وهذا غير ممكن';
+  const swappedFen = swapTurn(game.fen());
+  if (new Chess(swappedFen).in_check()) return 'ملك اللاعب الذي ليس دوره في كش، وضعية مستحيلة';
+  return null;
+}
+function swapTurn(fen) { const p = fen.split(' '); p[1] = p[1] === 'w' ? 'b' : 'w'; p[3] = '-'; return p.join(' '); }
+let preEditFen = '';
+function toggleEditMode() {
+  triggerHaptic('light');
+  if (isEditMode) { if (game.fen() !== preEditFen) { const err = validatePosition(); if (err) return showToast(err); if (!setFen(() => {})) return showToast('وضعية غير صالحة'); } }
+  if (!isEditMode) preEditFen = game.fen();
+  isEditMode = !isEditMode; selectedSquare = null; unselectPalette(); clearAnalysis(); lastMove = null; lastMoveClassification = null;
+  $('btn-edit').classList.toggle('active', isEditMode); $('edit-palette').classList.toggle('show', isEditMode);
+  renderBoard(); updateTurnIndicator(); autoEvaluate();
+  if (isEditMode) showToast('اضغط على مؤشر الدور لتبديل من يلعب');
+  else if (settings.aiEnabled) setTimeout(maybeAIPlay, 400);
+}
+function toggleTurnInEditMode() { if (!isEditMode) return; triggerHaptic('light'); setFen(p => p[1] = p[1] === 'w' ? 'b' : 'w'); updateTurnIndicator(); autoEvaluate(); }
+
+function copyFEN() { triggerHaptic('light'); $('fen-input').value = game.fen(); $('fen-input').select(); document.execCommand('copy'); showToast('تم نسخ FEN بنجاح'); }
+function loadFEN() {
+  const fen = $('fen-input').value.trim(); if (!fen) return;
+  triggerHaptic('light');
+  try {
+    if (game.load(fen)) {
+      closeModal('io-modal'); game.load(fen);
+      selectedSquare = null; lastMove = null; lastMoveClassification = null;
+      renderBoard(); updateTurnIndicator(); autoEvaluate();
+      showToast('تم تحميل FEN بنجاح');
+      if (settings.aiEnabled) setTimeout(maybeAIPlay, 500);
+    } else { showToast('كود FEN غير صالح'); }
+  } catch (e) { showToast('كود FEN غير صالح'); }
+}
+function copyPGN() { triggerHaptic('light'); $('pgn-input').value = game.pgn(); $('pgn-input').select(); document.execCommand('copy'); showToast('تم نسخ PGN بنجاح'); }
+function loadPGN() {
+  const pgn = $('pgn-input').value.trim(); if (!pgn) return;
+  triggerHaptic('light');
+  try {
+    if (game.load_pgn(pgn)) {
+      closeModal('io-modal');
+      selectedSquare = null; lastMove = null; lastMoveClassification = null;
+      const history = game.history({ verbose: true });
+      if (history.length > 0) { const last = history[history.length - 1]; lastMove = { from: last.from, to: last.to }; }
+      renderBoard(); updateTurnIndicator(); autoEvaluate();
+      showToast('تم تحميل PGN بنجاح');
+      if (settings.aiEnabled) setTimeout(maybeAIPlay, 500);
+    } else { showToast('نص PGN غير صالح'); }
+  } catch (e) { showToast('نص PGN غير صالح'); }
+}
+
+function setPlayerColor(color) {
+  triggerHaptic('light'); playerColor = color;
+  $('btn-white').classList.toggle('active', color === 'w');
+  $('btn-black').classList.toggle('active', color === 'b');
+  isBoardFlipped = color === 'b';
+  renderBoard(); drawBestMoveArrows();
+  if (settings.aiEnabled) setTimeout(maybeAIPlay, 300);
+}
+function flipBoard() { triggerHaptic('light'); isBoardFlipped = !isBoardFlipped; renderBoard(); drawBestMoveArrows(); }
+function resetGame() {
+  triggerHaptic('light'); playSound('start'); puzzle = null; game.reset(); selectedSquare = null; lastMove = null;
+  if (isEditMode) { isEditMode = false; $('btn-edit').classList.remove('active'); $('edit-palette').classList.remove('show'); }
+  clearAnalysis(); previousEval = 0; lastMoveClassification = null;
+  renderBoard(); updateTurnIndicator(); autoEvaluate();
+  if (settings.aiEnabled) setTimeout(maybeAIPlay, 500);
+}
+function undoMove() {
+  triggerHaptic('light');
+  if (isEditMode) return showToast('أغلق وضع التعديل أولاً');
+  game.undo(); const history = game.history({ verbose: true }); const last = history[history.length - 1];
+  lastMove = last ? { from: last.from, to: last.to } : null; selectedSquare = null;
+  clearAnalysis(); lastMoveClassification = null; renderBoard(); updateTurnIndicator(); autoEvaluate(); playSound('undo');
+}
+
+/* =========================================
+   8. AI Analysis
+   ========================================= */
+function getCleanFen() {
+  const parts = game.fen().split(' ');
+  parts[2] = '-'; parts[3] = '-';
+  return parts.join(' ');
+}
+
+function classifyMove(beforeEval, afterEval, move, bestMoveUci, legalMovesCount) {
+  if (game.in_checkmate()) return { type: 'checkmate' };
+  if (legalMovesCount === 1) return { type: 'forced' };
+  if (game.history().length <= 8 && !move.captured) return { type: 'book' };
+  const playedMoveUci = move.from + move.to + (move.promotion || '');
+  const isBestMove = (playedMoveUci === bestMoveUci);
+  let loss = 0;
+  if (move.color === 'w') loss = beforeEval - afterEval;
+  else loss = afterEval - beforeEval;
+  let isSacrifice = false;
+  if (move.captured) { isSacrifice = PIECE_VALUES[move.captured] < PIECE_VALUES[move.piece]; }
+  else {
+      isSacrifice = PIECE_VALUES[move.piece] >= 3 && game.moves({ verbose: true }).some(m => m.to === move.to && m.captured);
+  }
+  if (isBestMove && isSacrifice && Math.abs(afterEval) < 5) return { type: 'brilliant' };
+  if (isBestMove && move.captured && PIECE_VALUES[move.captured] >= 3) return { type: 'great' };
+  if (loss > 2.0) return { type: 'blunder' };
+  if (loss > 1.0) return { type: 'mistake' };
+  if (loss > 0.4) return { type: 'inaccuracy' };
+  if (isBestMove) return { type: 'best' };
+  return { type: 'good' };
+}
+
+async function fetchLichessEval(fen, signal) {
+  const res = await fetch(`https://lichess.org/api/cloud-eval?fen=${encodeURIComponent(fen)}&multiPv=5`, { signal });
+  if (!res.ok) throw new Error('Lichess failed');
+  const data = await res.json();
+  if (!data || !data.pvs || data.pvs.length === 0) throw new Error('Invalid Lichess eval');
+  const pv = data.pvs[0];
+  return {
+    bestMoveUci: pv.moves.split(' ')[0],
+    evalScore: pv.mate !== undefined ? (pv.mate > 0 ? 99 : -99) : (pv.cp || 0) / 100,
+    mateIn: pv.mate !== undefined ? pv.mate : null,
+    lines: packLines(data.pvs)
+  };
+}
+
+async function fetchChessApiEval(fen, signal) {
+  const res = await fetch(`https://chess-api.com/v1`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fen: fen, depth: 10 }), signal
+  });
+  if (!res.ok) throw new Error('Chess-API failed');
+  const data = await res.json();
+  if (!data || !data.from || !data.to) throw new Error('Invalid Chess-API eval');
+  let evalScore = 0, mateIn = null;
+  if (data.mate !== undefined && data.mate !== null) {
+    mateIn = parseInt(data.mate);
+    evalScore = mateIn > 0 ? 99 : -99;
+  } else if (data.eval !== undefined) {
+    if (typeof data.eval === 'string' && data.eval.includes('#')) {
+      mateIn = parseInt(data.eval.replace('#', '').replace('-', ''));
+      if (data.eval.includes('-')) mateIn = -mateIn;
+      evalScore = mateIn > 0 ? 99 : -99;
+    } else {
+      evalScore = data.eval / 100;
+    }
+  }
+  return { bestMoveUci: data.from + data.to, evalScore: evalScore, mateIn: mateIn };
+}
+
+async function autoEvaluate(isPlayerMove = false, moveObj = null) {
+  if (isEditMode) return;
+  clearTimeout(autoEvalTimeout);
+  autoEvalTimeout = setTimeout(() => runAutoEval(moveObj, 0), 200);
+}
+async function runAutoEval(moveObj, attempt) {
+  const coachBox = $('coach-box');
+  if (game.game_over()) {
+    if (game.in_checkmate()) { updateEvalBar(game.turn() === 'b' ? 99 : -99, 1); coachBox.innerHTML = `<strong class="mate-alert">🏆 كش مات! المباراة انتهت.</strong>`; }
+    else { updateEvalBar(0, null); coachBox.innerHTML = `<strong>🤝 تعادل.</strong>`; }
+    return;
+  }
+  const startFen = game.fen(), cf = getCleanFen(), cached = !!learnedDB[cf];
+  let bc = null, bn = 0;
+  if (moveObj) { const u = game.undo(); if (u) { bc = getCleanFen(); bn = game.moves().length; if (!game.move({ from: u.from, to: u.to, promotion: u.promotion })) game.load(startFen); } }
+  try {
+    const r = await getAnalysis(cf, 10);
+    if (game.fen() !== startFen) return;
+    updateEvalBar(r.evalScore, r.mateIn);
+    const H = settings.humanHints ? humanize(startFen, r) : null;
+    generateCoachExplanation(startFen, r.evalScore, r.mateIn, H ? H.m1 : r.bestMoveUci);
+    bestMoveData = { m1: H ? H.m1 : r.bestMoveUci, m2: H ? H.m2 : null, ev: r.evalScore, mate: r.mateIn, src: cached ? 'ذاكرة' : 'AI تلقائي', lines: H ? [] : r.lines };
+    drawBestMoveArrows();
+    const be = moveObj && bc && learnedDB[bc];
+    if (be) { lastMoveClassification = classifyMove(be.evalScore, r.evalScore, moveObj, be.bestMoveUci, bn); renderBoard(); }
+    previousEval = r.evalScore;
+  } catch (e) {
+    if (game.fen() !== startFen || isEditMode) return;
+    if (e.message !== 'nodata' && attempt < 2) { clearTimeout(autoEvalTimeout); autoEvalTimeout = setTimeout(() => runAutoEval(moveObj, attempt + 1), 4000 * (attempt + 1)); }
+  }
+}
+
+async function analyzePosition() {
+  triggerHaptic('light');
+  if (puzzle && !puzzle.busy) { bestMoveData = { m1: puzzle.sol[puzzle.i], m2: null }; drawBestMoveArrows(); return showToast('💡 تلميح: الحركة الذهبية على الرقعة'); }
+  if (isAnalyzing) return;
+  if (isEditMode) return showToast('أغلق وضع التعديل أولاً');
+  if (game.game_over()) return showToast($('turn-indicator').textContent.trim());
+  isAnalyzing = true; analyzeSince = Date.now();
+  const btn = $('btn-analyze'); btn.disabled = true;
+  $('btn-analyze-text').textContent = 'جارٍ التحليل…';
+  const spinner = document.createElement('i'); spinner.className = 'spinner'; btn.appendChild(spinner);
+  clearAnalysis();
+  const startFen = game.fen(), cf = getCleanFen(), cached = !!learnedDB[cf];
+  try {
+    const r = await Promise.race([getAnalysis(cf, settings.level >= 18 ? 16 : 12), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 20000))]);
+    if (game.fen() !== startFen) return;
+    const cl = r.lines || [];
+    const rd = { lines: cl.slice(0, linesCount()), m1: r.bestMoveUci, m2: cl[1] ? cl[1].moves.split(' ')[0] : null, ev: r.evalScore, mate: r.mateIn, src: cached ? 'ذاكرة' : 'AI' };
+    const H = settings.humanHints ? humanize(startFen, r) : null;
+    if (H) { rd.m1 = H.m1; rd.m2 = H.m2; rd.lines = []; }
+    bestMoveData = rd;
+    updateEvalBar(rd.ev, rd.mate);
+    generateCoachExplanation(startFen, rd.ev, rd.mate, rd.m1);
+    drawBestMoveArrows(); if (H) showHuman(H); else showLines(rd);
+    playSound('check');
+  } catch (e) { if (game.fen() === startFen) showToast(failMsg()); }
+  finally { isAnalyzing = false; btn.disabled = false; spinner.remove(); $('btn-analyze-text').textContent = 'أفضل نقلة'; }
+}
+
+/* =========================================
+   8.5 AI Play Engine (Level-based Opponent)
+   ========================================= */
+function getAIConfig(level) {
+  return LEVELS.find(l => l[0] === level) || LEVELS[LEVELS.length - 1];
+}
+
+/* ===== Human-like opponent: level-based natural mistakes, varied choices, human think-time ===== */
+const HUMAN = { 1: { T: 1.6, err: .25 }, 2: { T: 1.0, err: .15 }, 4: { T: .6, err: .08 }, 8: { T: .35, err: .04 }, 12: { T: .2, err: .015 }, 18: { T: .1, err: .005 } };
+const pickW = a => { let r = Math.random() * a.reduce((t, x) => t + x.w, 0); for (const x of a) { r -= x.w; if (r <= 0) return x; } return a[a.length - 1]; };
+function humanDist(fen, level, r, det) {   // probability of each move being played by a human of this level
+  const g = new Chess(fen), cfg = HUMAN[level] || HUMAN[18], sgn = g.turn() === 'w' ? 1 : -1, legal = g.moves({ verbose: true });
+  if (!legal.length) return [];
+  const find = u => legal.find(m => m.from + m.to === u.slice(0, 4));
+  const ev = l => (l.mate !== undefined && l.mate !== null) ? (l.mate > 0 ? 30 : -30) : (l.cp || 0) / 100;
+  const lines = (r.lines || []).filter(l => find(l.moves.split(' ')[0])), pool = [];
+  if (lines.length > 1) { const top = sgn * ev(lines[0]); lines.forEach(l => pool.push({ m: find(l.moves.split(' ')[0]), w: Math.exp(-Math.max(0, top - sgn * ev(l)) / cfg.T) })); }
+  else { const b = find(r.bestMoveUci); if (b) pool.push({ m: b, w: 1 }); }
+  if (!pool.length) return [];
+  const tot = pool.reduce((t, x) => t + x.w, 0); pool.forEach(x => x.w /= tot);
+  const pe = Math.min(.6, cfg.err * (pool.length < 2 ? 2 : 1));
+  const h = m => (m.captured ? PIECE_VALUES[m.captured] * 1.2 : 0) + ('nb'.includes(m.piece) && /[18]/.test(m.from[1]) ? 1 : 0) + (/[de][45]/.test(m.to) ? .8 : 0) + (/[kq]/.test(m.flags) ? 1.5 : 0) + (m.san.includes('+') ? .8 : 0) + (det ? 0 : Math.random() * 1.5);
+  const taken = new Set(pool.map(p => p.m.from + p.m.to));
+  const c = legal.filter(m => !taken.has(m.from + m.to)).map(m => ({ m, s: h(m) })).sort((a, b) => b.s - a.s).slice(0, 8).filter(x => {
+    if (level >= 4 && !safeAfter(g, x.m)) return false;
+    g.move(x.m); let bad = false;
+    for (const o of g.moves({ verbose: true })) { g.move(o); const mt = g.in_checkmate(); g.undo(); if (mt) { bad = true; break; } }
+    g.undo(); return !bad;
+  }).map(x => ({ m: x.m, w: Math.exp(x.s / 1.2) }));
+  if (!c.length) return pool;
+  const ct = c.reduce((t, x) => t + x.w, 0); c.forEach(x => x.w = x.w / ct * pe); pool.forEach(x => x.w *= 1 - pe);
+  return pool.concat(c);
+}
+function humanMove(fen, level, r) {
+  const d = humanDist(fen, level, r, false);
+  if (d.length) { const m = pickW(d).m; return { from: m.from, to: m.to, promotion: m.promotion || 'q' }; }
+  const l = new Chess(fen).moves({ verbose: true }); if (!l.length) return null;
+  const m = l[Math.floor(Math.random() * l.length)]; return { from: m.from, to: m.to, promotion: m.promotion || 'q' };
+}
+/* Educational mode: suggestions = the moves a human of the chosen level is most likely to play */
+let humanList = [];
+function humanize(fen, r) {
+  try {
+    const d = humanDist(fen, settings.level, r, true).sort((a, b) => b.w - a.w).slice(0, 3);
+    if (!d.length) return null;
+    const list = d.map(x => ({ uci: x.m.from + x.m.to + (x.m.promotion || ''), san: x.m.san, p: x.w }));
+    return { list, m1: list[0].uci, m2: list[1] ? list[1].uci : null };
+  } catch (e) { return null; }
+}
+function showHuman(H) {
+  humanList = H.list;
+  const lv = (LEVELS.find(l => l[0] === settings.level) || LEVELS[LEVELS.length - 1])[1];
+  $('coach-box').insertAdjacentHTML('beforeend', `<br>🧑 <strong>نقلات بشرية محتملة (${lv}):</strong> ` + H.list.map((x, i) => `<span class="ln" onclick="pickHuman(${i})"><b>${Math.round(x.p * 100)}%</b> ${x.san}</span>`).join(''));
+}
+function pickHuman(i) { const x = humanList[i]; if (!x || !bestMoveData) return; triggerHaptic('light'); bestMoveData.m1 = x.uci; bestMoveData.m2 = null; drawBestMoveArrows(); }
+function humanDelay(fen, mv) {
+  const g = new Chess(fen), all = g.moves({ verbose: true }), n = all.length, m = all.find(x => x.from === mv.from && x.to === mv.to);
+  let d = 600 + Math.random() * 1100 + Math.random() * Math.min(2200, n * 55);
+  if (m && m.captured) d *= .75; if (n <= 2) d *= .5; if ((parseInt(fen.split(' ')[5]) || 1) <= 6) d *= .7;
+  return d * (settings.level <= 2 ? .75 : settings.level >= 12 ? 1.25 : 1);
+}
+async function getAIMove(fen, level) {
+  lastAiPick = null;
+  const bk = londonMove(fen); if (bk) return bk;
+  const p = fen.split(' '); p[2] = '-'; p[3] = '-';
+  let r = null; try { r = await getAnalysis(p.join(' '), level >= 18 ? 16 : 12); } catch (e) { console.warn('AI analysis:', e.message); }
+  if (!r || !legalUci(fen, r.bestMoveUci)) return null;
+  const u = r.bestMoveUci;
+  return humanMove(fen, level, r) || { from: u.slice(0, 2), to: u.slice(2, 4), promotion: u[4] || 'q' };
+}
+
+async function maybeAIPlay() {
+  if (!settings.aiEnabled) return;
+  if (aiThinking || puzzle) return;
+  if (isEditMode) return;
+  if (game.game_over()) return;
+  if (game.turn() === playerColor) return;
+  aiThinking = true; aiSince = Date.now();
+  const expectedFen = game.fen();
+  const indicator = $('turn-indicator');
+  indicator.innerHTML = `<i class="turn-dot" style="background:var(--brass)"></i> 🤖 الذكاء الاصطناعي يفكر…`;
+  try {
+    const t0 = Date.now();
+    await new Promise(r => setTimeout(r, 200 + Math.random() * 300));
+    if (game.fen() !== expectedFen) return;
+    const move = await getAIMove(game.fen(), settings.level);
+    if (move) { const w = humanDelay(expectedFen, move) - (Date.now() - t0); if (w > 0) await new Promise(r => setTimeout(r, w)); }
+    if (move && game.fen() === expectedFen) {
+      aiRetry = 0; executeMove(move.from, move.to, move.promotion);
+    } else if (!move && game.fen() === expectedFen && aiRetry++ < 6) { showToast('⏳ الخدمة مشغولة — الخصم يعيد المحاولة'); setTimeout(maybeAIPlay, 5000); }
+  } catch (e) { console.warn('AI play failed:', e); }
+  finally {
+    aiThinking = false;
+    if (game.fen() === expectedFen && !game.game_over()) updateTurnIndicator();
+  }
+}
+
+function toggleAI() {
+  triggerHaptic('light');
+  settings.aiEnabled = !settings.aiEnabled;
+  saveSettings();
+  buildSettingsUI();
+  if (settings.aiEnabled) {
+    showToast('🤖 الذكاء الاصطناعي مفعّل — سيلعب كخصم لك');
+    setTimeout(maybeAIPlay, 400);
+  } else {
+    showToast('🤖 الذكاء الاصطناعي متوقف');
+    updateTurnIndicator();
+  }
+}
+
+function drawArrowLine(id, uci) {
+  const el = $(id); if (!uci) { el.style.display = 'none'; return; }
+  const getPt = s => { let f = FILES.indexOf(s[0]), r = RANKS.indexOf(s[1]); if (isBoardFlipped) { f = 7 - f; r = 7 - r; } return [f + 0.5, r + 0.5]; };
+  const start = getPt(uci.slice(0, 2)); const end = getPt(uci.slice(2, 4));
+  el.setAttribute('x1', start[0]); el.setAttribute('y1', start[1]); el.setAttribute('x2', end[0]); el.setAttribute('y2', end[1]); el.style.display = 'block';
+}
+function drawBestMoveArrows() { if (!bestMoveData) return; drawArrowLine('arrow-best', bestMoveData.m1); drawArrowLine('arrow-alt', bestMoveData.m2 && bestMoveData.m2 !== bestMoveData.m1 ? bestMoveData.m2 : null); }
+function playSuggestedMove() { if (bestMoveData) { const m = bestMoveData.m1; executeMove(m.slice(0, 2), m.slice(2, 4), m[4] || 'q'); } }
+
+/* =========================================
+   9. Init
+   ========================================= */
+/* ===== v2 additions ===== */
+settings = { ui: 'auto', coords: true, london: true, humanHints: true, ...settings };
+let puzzle = null;
+
+/* UI theme */
+function applyUI() {
+  const ui = settings.ui === 'auto' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : settings.ui;
+  document.documentElement.dataset.ui = ui;
+  document.querySelector('meta[name=theme-color]').content = ui === 'light' ? '#ffffff' : '#101216';
+  document.body.classList.toggle('nocoords', !settings.coords);
+}
+const _bsu = buildSettingsUI;
+buildSettingsUI = function () {
+  _bsu();
+  const names = { auto: 'تلقائي', dark: 'داكن', light: 'فاتح' };
+  $('settings-extra').innerHTML = `<button class="list-btn" onclick="cycleUI()">مظهر التطبيق: ${names[settings.ui]}<span>اضغط للتبديل</span></button><button class="list-btn" onclick="settings.coords=!settings.coords;saveSettings();buildSettingsUI()">إحداثيات الرقعة: ${settings.coords ? 'ظاهرة' : 'مخفية'}<span>a-h / 1-8</span></button><h4>الافتتاح</h4><button class="list-btn" onclick="settings.london=!settings.london;saveSettings();buildSettingsUI()">افتتاحية لندن: ${settings.london ? 'مفعّلة' : 'متوقفة'}<span>للخصم والتلميحات</span></button><button class="list-btn" onclick="settings.humanHints=!settings.humanHints;saveSettings();buildSettingsUI();clearAnalysis()">🧑 اقتراحات بشرية حسب المستوى: ${settings.humanHints ? 'مفعّلة' : 'متوقفة'}<span>نقلات يلعبها إنسان بمستواك</span></button><h4>المزامنة السحابية</h4><button class="list-btn" onclick="cloudSync(true)">☁️ مزامنة الآن<span>${memN} وضعية محفوظة</span></button><button class="list-btn" onclick="showSyncKey()">🔑 مفتاح المزامنة<span>لنقل بياناتك لجهاز آخر</span></button><h4>ذاكرة الوضعيات</h4><button class="list-btn" onclick="exportMemory()">💾 تصدير الذاكرة<span>نسخة احتياطية</span></button><button class="list-btn" onclick="$('mem-file').click()">📥 استيراد الذاكرة<span>من ملف</span></button><input type="file" id="mem-file" accept=".json" hidden onchange="importMemory(this)">`;
+  applyUI();
+};
+function cycleUI() { settings.ui = { auto: 'dark', dark: 'light', light: 'auto' }[settings.ui] || 'auto'; saveSettings(); buildSettingsUI(); }
+
+/* ===== Persistent memory: every analysis/AI move is saved forever (IndexedDB) and reused without any new request ===== */
+const IDB = {
+  db: null,
+  open() { return new Promise(res => { try { const r = indexedDB.open('chess_mem', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { IDB.db = r.result; res(); }; r.onerror = r.onblocked = () => res(); } catch (e) { res(); } }); },
+  all() { return new Promise(res => { if (!IDB.db) return res({}); const out = {}; try { const c = IDB.db.transaction('kv').objectStore('kv').openCursor(); c.onsuccess = () => { const u = c.result; if (u) { out[u.key] = u.value; u.continue(); } else res(out); }; c.onerror = () => res(out); } catch (e) { res(out); } }); },
+  put(o) { if (!IDB.db) return; try { const st = IDB.db.transaction('kv', 'readwrite').objectStore('kv'); for (const k in o) st.put(o[k], k); } catch (e) {} },
+  del(k) { if (!IDB.db) return; try { IDB.db.transaction('kv', 'readwrite').objectStore('kv').delete(k); } catch (e) {} }
+};
+let memN = 0; const dirty = {};
+const isAi = k => k[1] === ':';
+updateLearnedCountUI = () => { const el = $('learned-count'); if (el) el.textContent = memN; };
+function flushMem() {
+  if (!IDB.db) { try { localStorage.setItem('chess_ai_learned_db', JSON.stringify(learnedDB)); } catch (e) {} return; }
+  const b = { ...dirty }; for (const k in b) delete dirty[k]; IDB.put(b);
+}
+saveLearningDB = function (k, v) {
+  if (!(k in learnedDB) && !isAi(k)) memN++;
+  learnedDB[k] = v; dirty[k] = v; updateLearnedCountUI();
+  clearTimeout(saveLearningDB.t); saveLearningDB.t = setTimeout(flushMem, 700);
+};
+loadLearningDB = async function () {
+  await IDB.open(); const all = await IDB.all(); let old = {};
+  try { old = JSON.parse(localStorage.getItem('chess_ai_learned_db') || '{}'); } catch (e) {}
+  Object.assign(learnedDB, old, all);
+  if (IDB.db) { const mig = {}; for (const k in old) if (!(k in all)) mig[k] = old[k]; IDB.put(mig); try { localStorage.removeItem('chess_ai_learned_db'); } catch (e) {} }
+  memN = Object.keys(learnedDB).filter(k => !isAi(k)).length; updateLearnedCountUI();
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
+};
+document.addEventListener('visibilitychange', () => { if (document.hidden) flushMem(); }); addEventListener('pagehide', flushMem);
+const packLines = pvs => (pvs || []).slice(0, 5).map(p => ({ moves: p.moves.split(' ').slice(0, 6).join(' '), cp: p.cp, mate: p.mate }));
+function exportMemory() { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(learnedDB)], { type: 'application/json' })); a.download = 'chess-memory.json'; a.click(); showToast('تم تصدير الذاكرة'); }
+function importMemory(inp) {
+  const f = inp.files[0]; if (!f) return;
+  f.text().then(t => { const o = JSON.parse(t); let n = 0; for (const k in o) if (!(k in learnedDB)) { saveLearningDB(k, o[k]); n++; } showToast('تم استيراد ' + n + ' وضعية'); }).catch(() => showToast('ملف غير صالح'));
+}
+
+/* Natural-language commentary */
+function describeMove(fen, uci) {
+  try {
+    const g = new Chess(fen), m = g.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] || 'q' }); if (!m) return '';
+    const r = [], p = PIECE_NAMES_AR[m.piece];
+    if (g.in_checkmate()) r.push('تُنهي المباراة بكش مات');
+    else {
+      if (/[kq]/.test(m.flags)) r.push('تؤمّن الملك وتُنشّط القلعة بالتبييت');
+      if (m.promotion) r.push('ترقّي الجندي إلى ' + PIECE_NAMES_AR[m.promotion]);
+      if (m.captured) r.push('تأخذ ' + PIECE_NAMES_AR[m.captured]);
+      if (g.in_check()) r.push('تعطي كش');
+      if ('nb'.includes(m.piece) && /[18]/.test(m.from[1]) && !m.captured) r.push('تُطوّر ' + p + ' إلى مربع أنشط');
+      if (m.piece === 'p' && /[de]/.test(m.to[0]) && /[45]/.test(m.to[1])) r.push('تسيطر على المركز');
+      try { const g2 = new Chess(swapTurn(g.fen())); if (g2.moves({ verbose: true }).filter(x => x.from === m.to && x.captured && PIECE_VALUES[x.captured] >= 3).length >= 2) r.push('تهاجم قطعتين معاً (شوكة)'); } catch (e) {}
+    }
+    return r.length ? r.join('، ') + '.' : 'تُحسّن موقع ' + p + ' وتزيد الضغط بهدوء.';
+  } catch (e) { return ''; }
+}
+const _gce = generateCoachExplanation;
+generateCoachExplanation = function (fen, score, mateIn, uci) {
+  _gce(fen, score, mateIn, uci);
+  const d = uci && describeMove(fen, uci);
+  if (d) $('coach-box').innerHTML += `<br>🧠 <strong>الفكرة:</strong> ${d}`;
+  const lb = londonSan(fen); if (lb) $('coach-box').innerHTML += `<br>📘 <strong>خطة لندن:</strong> ${lb}`;
+};
+const CLS_AR = { brilliant: '✨ نقلة رائعة!', great: '👏 نقلة قوية', best: '⭐ أفضل نقلة', good: '👍 نقلة جيدة', book: '📖 نقلة افتتاحية معروفة', inaccuracy: '⚠️ نقلة غير دقيقة', mistake: '❗ خطأ — كان هناك أفضل', blunder: '💥 غلطة فادحة!', forced: '➡️ نقلة إجبارية', checkmate: '👑 كش مات' };
+const _cm = classifyMove;
+classifyMove = function () { const r = _cm.apply(null, arguments); const mv = arguments[2];
+  if (r && (r.type === 'mistake' || r.type === 'blunder') && lastAiPick && mv.from === lastAiPick.from && mv.to === lastAiPick.to) { delete learnedDB[lastAiPick.key]; delete dirty[lastAiPick.key]; IDB.del(lastAiPick.key); lastAiPick = null; } setTimeout(() => { if (r && CLS_AR[r.type]) $('coach-box').insertAdjacentHTML('afterbegin', `<strong>${CLS_AR[r.type]}</strong><br>`); }, 0); return r; };
+
+/* Best lines by level */
+const linesCount = () => settings.level <= 2 ? 1 : settings.level <= 8 ? 2 : 3;
+function showLines(rd) {
+  if (!rd.lines || !rd.lines.length) return;
+  const fen = game.fen();
+  const html = rd.lines.map((pv, i) => {
+    const g = new Chess(fen), san = [];
+    for (const u of pv.moves.split(' ').slice(0, 5)) { const m = g.move({ from: u.slice(0, 2), to: u.slice(2, 4), promotion: u[4] || 'q' }); if (!m) break; san.push(m.san); }
+    const ev = pv.mate !== undefined ? 'M' + Math.abs(pv.mate) : ((pv.cp || 0) / 100 > 0 ? '+' : '') + ((pv.cp || 0) / 100).toFixed(1);
+    return `<span class="ln" onclick="pickLine(${i})"><b>${ev}</b> ${san.join(' ')}</span>`;
+  }).join('');
+  $('coach-box').insertAdjacentHTML('beforeend', '<br>' + html);
+}
+function pickLine(i) { const pv = bestMoveData && bestMoveData.lines && bestMoveData.lines[i]; if (!pv) return; triggerHaptic('light'); bestMoveData.m1 = pv.moves.split(' ')[0]; bestMoveData.m2 = null; drawBestMoveArrows(); }
+
+/* Modes */
+function setMode(m) { puzzle = null; settings.aiEnabled = m === 'ai'; saveSettings(); buildSettingsUI(); closeModal('modes-modal'); resetGame(); showToast(m === 'ai' ? '🤖 العب ضد الذكاء — غيّر المستوى من الإعدادات' : '🔍 وضع التحليل الحر'); }
+async function startDaily() {
+  closeModal('modes-modal'); showToast('جارٍ تحميل اللغز…');
+  try {
+    const d = await (await fetch('https://lichess.org/api/puzzle/daily')).json();
+    game.reset(); game.load_pgn(d.game.pgn);
+    const sol = d.puzzle.solution.slice(), ok = u => game.moves({ verbose: true }).some(m => m.from + m.to + (m.promotion || '') === u);
+    if (!ok(sol[0])) { const u = sol.shift(); game.move({ from: u.slice(0, 2), to: u.slice(2, 4), promotion: u[4] || 'q' }); }
+    puzzle = { sol, i: 0, busy: false };
+    playerColor = game.turn(); isBoardFlipped = playerColor === 'b';
+    $('btn-white').classList.toggle('active', playerColor === 'w'); $('btn-black').classList.toggle('active', playerColor === 'b');
+    const h = game.history({ verbose: true }).pop(); lastMove = h ? { from: h.from, to: h.to } : null; lastMoveClassification = null; selectedSquare = null; clearAnalysis();
+    renderBoard(); updateTurnIndicator(); updateEvalBar(0);
+    $('coach-box').innerHTML = `<strong>🧩 اللغز اليومي</strong> (تصنيف ${d.puzzle.rating})<br>ابحث عن أفضل نقلة لـ${playerColor === 'w' ? 'الأبيض' : 'الأسود'}. زر «أفضل نقلة» يعطيك تلميحاً.`;
+  } catch (e) { showToast('تعذّر تحميل اللغز، تحقق من الاتصال'); }
+}
+function puzzleCheck(m) {
+  if (puzzle.busy) return;
+  if (m.from + m.to + (m.promotion || '') === puzzle.sol[puzzle.i]) {
+    puzzle.i++; if (puzzle.i >= puzzle.sol.length) return puzzleDone();
+    puzzle.busy = true;
+    setTimeout(() => { const n = puzzle.sol[puzzle.i++]; executeMove(n.slice(0, 2), n.slice(2, 4), n[4] || 'q'); puzzle.busy = false; if (puzzle.i >= puzzle.sol.length) puzzleDone(); }, 500);
+  } else { showToast('❌ ليست النقلة الصحيحة — جرّب مجدداً'); setTimeout(undoMove, 700); }
+}
+function puzzleDone() { puzzle = null; playSound('promote'); $('coach-box').innerHTML = '<strong>🎉 أحسنت! حللت اللغز.</strong><br>جرّب «اللغز اليومي» غداً لتحدٍّ جديد.'; showToast('🎉 حللت اللغز!'); }
+
+/* Library (local + cloud) */
+const getGames = () => { try { return JSON.parse(localStorage.getItem('chess_games') || '[]'); } catch (e) { return []; } };
+const putGames = g => { try { localStorage.setItem('chess_games', JSON.stringify(g.slice(0, 200))); localStorage.setItem('chess_games_t', Date.now()); } catch (e) {} };
+function saveGame(silent) {
+  const pgn = game.pgn(); if (!game.history().length) return silent === true || showToast('لا توجد نقلات لحفظها');
+  const g = getGames(); if (g.some(x => x.pgn === pgn)) return silent === true || showToast('محفوظة مسبقاً');
+  g.unshift({ id: Date.now().toString(36), pgn, date: Date.now(), n: game.history().length, r: game.in_checkmate() ? (game.turn() === 'w' ? '0-1' : '1-0') : '' });
+  putGames(g); if (silent !== true) { showToast('💾 تم الحفظ'); renderLibrary(); }
+}
+function openLibrary() { renderLibrary(); openModal('lib-modal'); }
+function renderLibrary() {
+  const g = getGames();
+  $('lib-list').innerHTML = g.length ? g.map(x => `<div class="game-row"><button class="list-btn" onclick="loadSaved('${x.id}')">${new Date(x.date).toLocaleDateString('ar')} ${x.r}<span>${x.n} نقلة</span></button><button class="del" onclick="delSaved('${x.id}')" aria-label="حذف"><i class="fa-solid fa-trash"></i></button></div>`).join('') : '<div style="color:var(--muted);text-align:center;padding:14px">لا توجد مباريات محفوظة بعد</div>';
+}
+function loadSaved(id) { const x = getGames().find(y => y.id === id); if (!x) return; puzzle = null; game.reset(); game.load_pgn(x.pgn); const h = game.history({ verbose: true }).pop(); lastMove = h ? { from: h.from, to: h.to } : null; lastMoveClassification = null; selectedSquare = null; clearAnalysis(); closeModal('lib-modal'); renderBoard(); updateTurnIndicator(); autoEvaluate(); }
+function delSaved(id) { putGames(getGames().filter(x => x.id !== id)); renderLibrary(); }
+let _uti = updateTurnIndicator;
+updateTurnIndicator = function () { _uti(); if (game.game_over()) saveGame(true); };
+
+/* Keyboard, PWA, iOS hint */
+document.addEventListener('keydown', e => { if (/INPUT|TEXTAREA/.test(e.target.tagName)) return; if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') undoMove(); else if (e.key === 'f') flipBoard(); else if (e.key === ' ') { e.preventDefault(); analyzePosition(); } });
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+if (/iP(hone|ad|od)/.test(navigator.userAgent) && !navigator.standalone && !localStorage.getItem('ios_hint')) { setTimeout(() => showToast('للتثبيت: زر المشاركة ← «إضافة إلى الشاشة الرئيسية»'), 4000); try { localStorage.setItem('ios_hint', 1); } catch (e) {} }
+
+
+/* ===== v3: stability ===== */
+/* ===== v4: network coordinator (no more parallel/aborted requests) + London repertoire ===== */
+let lastAiPick = null, aiRetry = 0, analyzeSince = 0, aiSince = 0;
+const Net = {
+  cool: { li: 0, ca: 0 }, q: Promise.resolve(), inflight: new Map(),
+  async tf(url, o, ms) { const c = new AbortController(), t = setTimeout(() => c.abort(), ms); try { return await fetch(url, { ...o, signal: c.signal }); } finally { clearTimeout(t); } },
+  lichess(fen) {
+    const run = async () => {
+      if (Date.now() < Net.cool.li) throw new Error('cool');
+      let r; try { r = await Net.tf(`https://lichess.org/api/cloud-eval?fen=${encodeURIComponent(fen)}&multiPv=5`, {}, 7000); } catch (e) { Net.cool.li = Date.now() + 8000; throw e; }
+      if (r.status === 404) throw new Error('nodata');
+      if (r.status === 429) { Net.cool.li = Date.now() + 60000; throw new Error('429'); }
+      if (!r.ok) { Net.cool.li = Date.now() + 15000; throw new Error('http'); }
+      const d = await r.json(); if (!d || !d.pvs || !d.pvs.length) throw new Error('nodata');
+      const pv = d.pvs[0];
+      return { bestMoveUci: pv.moves.split(' ')[0], evalScore: pv.mate !== undefined ? (pv.mate > 0 ? 99 : -99) : (pv.cp || 0) / 100, mateIn: pv.mate !== undefined ? pv.mate : null, lines: packLines(d.pvs) };
+    };
+    const p = Net.q.then(run);
+    Net.q = p.catch(() => {}).then(() => new Promise(r => setTimeout(r, 300)));
+    return p;
+  },
+  async chessApi(fen, depth) {
+    if (Date.now() < Net.cool.ca) throw new Error('cool');
+    try {
+      const r = await Net.tf('https://chess-api.com/v1', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fen, depth }) }, 15000);
+      if (r.status === 429) { Net.cool.ca = Date.now() + 30000; throw new Error('429'); }
+      if (!r.ok) throw new Error('http');
+      const d = await r.json(); if (!d || !d.from || !d.to) throw new Error('bad'); return d;
+    } catch (e) { if (e.message !== '429') Net.cool.ca = Date.now() + 4000; throw e; }
+  }
+};
+const fromApi = d => {
+  let ev = 0, mate = null;
+  if (d.mate !== undefined && d.mate !== null && d.mate !== 0) { mate = parseInt(d.mate); ev = mate > 0 ? 99 : -99; }
+  else if (d.centipawns != null && !isNaN(parseFloat(d.centipawns))) ev = parseFloat(d.centipawns) / 100;
+  else if (d.eval != null && !isNaN(parseFloat(d.eval))) ev = parseFloat(d.eval);
+  return { bestMoveUci: d.from + d.to + (d.promotion || ''), evalScore: ev, mateIn: mate };
+};
+const legalUci = (fen, u) => { try { return !!u && new Chess(fen).moves({ verbose: true }).some(m => m.from === u.slice(0, 2) && m.to === u.slice(2, 4)); } catch (e) { return false; } };
+/* one request per position, results validated, failures are never stored */
+function getAnalysis(cf, depth) {
+  if (learnedDB[cf]) return Promise.resolve(learnedDB[cf]);
+  if (Net.inflight.has(cf)) return Net.inflight.get(cf);
+  const p = (async () => {
+    let res = null, err = null;
+    try { res = await Net.lichess(cf); } catch (e) { err = e; }
+    if (!res) { try { res = fromApi(await Net.chessApi(cf, depth || 12)); } catch (e) { err = e; } }
+    if (!res) throw err || new Error('fail');
+    if (!legalUci(cf, res.bestMoveUci)) throw new Error('illegal');
+    saveLearningDB(cf, res); return res;
+  })();
+  Net.inflight.set(cf, p); p.catch(() => {}).then(() => Net.inflight.delete(cf));
+  return p;
+}
+const failMsg = () => navigator.onLine === false ? 'لا يوجد اتصال بالإنترنت' : 'خدمة التحليل مشغولة، أعد المحاولة بعد لحظات';
+
+/* London System repertoire — always checks the opponent's counter-play first */
+const exNet = (g, m) => { const t = new Chess(g.fen()); t.move(m); return PIECE_VALUES[m.captured] - (t.moves({ verbose: true }).some(x => x.to === m.to && x.captured) ? PIECE_VALUES[m.piece] : 0); };
+function safeAfter(g, m) {
+  const h = new Chess(g.fen()); h.move(m); let worst = 0;
+  for (const o of h.moves({ verbose: true })) if (o.captured) worst = Math.max(worst, exNet(h, o));
+  return worst <= 0;
+}
+function londonMove(fen) {
+  if (!settings.london) return null;
+  try {
+    const g = new Chess(fen), me = g.turn(), full = parseInt(fen.split(' ')[5]) || 1;
+    if (g.in_check() || full > 12) return null;
+    let mat = 0; g.board().forEach(r => r.forEach(p => { if (p) mat += (p.color === me ? 1 : -1) * PIECE_VALUES[p.type]; }));
+    if (mat < 0) return null;
+    const mine = g.moves({ verbose: true });
+    if (mine.some(x => x.captured && exNet(g, x) > 0)) return null;
+    const plan = me === 'w' ? ['d2d4', 'g1f3', 'c1f4', 'e2e3', 'c2c3', 'b1d2', 'f1d3', 'e1g1'] : ['d7d5', 'g8f6', 'c8f5', 'e7e6', 'c7c6', 'b8d7', 'f8d6', 'e8g8'];
+    let pick = null, alt = null;
+    for (const u of plan) {
+      const m = mine.find(x => x.from + x.to === u); if (!m) continue;
+      if (!pick) { if (!safeAfter(g, m)) return null; pick = m; } else { if (safeAfter(g, m)) alt = m; break; }
+    }
+    const c = (alt && Math.random() < .2) ? alt : pick;
+    if (c) return { from: c.from, to: c.to, promotion: 'q' };
+  } catch (e) {}
+  return null;
+}
+function londonSan(fen) { const u = londonMove(fen); if (!u) return ''; try { return new Chess(fen).move(u).san; } catch (e) { return ''; } }
+
+Object.values(PIECE_IMAGES).forEach(k => { new Image().src = `https://upload.wikimedia.org/wikipedia/commons/${k}.svg`; });
+addEventListener('online', () => setTimeout(maybeAIPlay, 500));
+addEventListener('unhandledrejection', e => e.preventDefault());
+setInterval(() => {
+  if (isAnalyzing && Date.now() - analyzeSince > 25000) { isAnalyzing = false; const b = $('btn-analyze'); b.disabled = false; const sp = b.querySelector('.spinner'); if (sp) sp.remove(); $('btn-analyze-text').textContent = 'أفضل نقلة'; }
+  if (aiThinking && Date.now() - aiSince > 30000) { aiThinking = false; setTimeout(maybeAIPlay, 300); }
+}, 4000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { aiThinking = false; if (settings.aiEnabled) setTimeout(maybeAIPlay, 300); } });
+
+/* ===== Anonymous cloud sync (secret key, no account) ===== */
+const b64u = a => btoa(String.fromCharCode(...a)).replace(/[+/=]/g, c => ({ '+': '-', '/': '_', '=': '' })[c]);
+let syncKey = localStorage.getItem('chess_sync_key') || b64u(crypto.getRandomValues(new Uint8Array(24)));
+try { localStorage.setItem('chess_sync_key', syncKey); } catch (e) {}
+let cloudT = +localStorage.getItem('chess_cloud_t') || 0, cloudTimer = null, cloudFail = 0, cloudBusy = false;
+const schedCloud = () => { clearTimeout(cloudTimer); cloudTimer = setTimeout(() => cloudSync(), 20000); };
+const _sl = saveLearningDB;
+saveLearningDB = function (k, v) { if (!isAi(k) && v && typeof v === 'object') v.t = Date.now(); _sl(k, v); schedCloud(); };
+function mergeCloud(d) {
+  let n = 0;
+  for (const k in (d.db || {})) if (!(k in learnedDB)) { learnedDB[k] = d.db[k]; dirty[k] = d.db[k]; memN++; n++; }
+  if (n) { updateLearnedCountUI(); clearTimeout(saveLearningDB.t); saveLearningDB.t = setTimeout(flushMem, 300); }
+  const g = getGames(), ids = new Set(g.map(x => x.id)), add = (d.games || []).filter(x => !ids.has(x.id));
+  if (add.length) putGames([...g, ...add].sort((a, b) => b.date - a.date));
+}
+async function cloudSync(manual) {
+  if (cloudBusy || (cloudFail >= 3 && !manual)) return;
+  cloudBusy = true; const t0 = Date.now(), up = {};
+  for (const k in learnedDB) { const v = learnedDB[k]; if (!isAi(k) && (v.t || 1) > cloudT) up[k] = v; }
+  try {
+    const r = await fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: syncKey, since: cloudT, db: up, games: getGames() }) });
+    if (!r.ok) throw new Error(r.status);
+    mergeCloud(await r.json()); cloudT = t0; cloudFail = 0;
+    try { localStorage.setItem('chess_cloud_t', cloudT); } catch (e) {}
+    if (manual) showToast('☁️ تمت المزامنة — ' + memN + ' وضعية');
+  } catch (e) { cloudFail++; if (manual) showToast('تعذّرت المزامنة — الخدمة السحابية غير مفعّلة بعد'); }
+  cloudBusy = false;
+}
+function showSyncKey() {
+  const k = prompt('مفتاح مزامنتك — احتفظ به سراً. للاستعادة من جهاز آخر الصق مفتاحه هنا:', syncKey);
+  if (k && k !== syncKey && /^[A-Za-z0-9_-]{32,64}$/.test(k.trim())) { syncKey = k.trim(); cloudT = 0; try { localStorage.setItem('chess_sync_key', syncKey); localStorage.setItem('chess_cloud_t', 0); } catch (e) {} cloudFail = 0; cloudSync(true); }
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden) cloudSync(); });
+
+const memReady = loadLearningDB();
+buildSettingsUI(); initEditPalette(); renderBoard(); updateTurnIndicator(); updateEvalBar(0);
+memReady.then(() => autoEvaluate());
+memReady.then(() => setTimeout(cloudSync, 1500));
+if (settings.aiEnabled) setTimeout(maybeAIPlay, 700);
+</script>
+</body>
+</html>
