@@ -1537,16 +1537,10 @@ let accountUser = null, accountSyncTimer = null, accountSyncBusy = false;
 async function loginWithGoogle(button) {
   if (button?.disabled) return;
   if (button) { button.disabled = true; button.textContent = 'جارٍ الاتصال بـ Google…'; }
-
-  // Open synchronously during the tap so iOS does not block the sign-in window.
-  const authWindow = window.open('about:blank', '_blank');
-  if (authWindow) {
-    try {
-      authWindow.document.title = 'Google Sign-In';
-      authWindow.document.body.textContent = 'جارٍ الاتصال بـ Google…';
-    } catch (_) {}
-  }
   try {
+    // Avoid popup blockers and iOS Home Screen popup lifecycle issues.
+    // Fetch the OAuth URL on the same origin, then navigate this page directly
+    // to Google's authorization endpoint (never navigate to the API route).
     const response = await fetch('/api/auth/google-url', {
       method: 'GET',
       cache: 'no-store',
@@ -1555,30 +1549,25 @@ async function loginWithGoogle(button) {
     });
     const raw = await response.text();
     let data;
-    try { data = JSON.parse(raw); } catch (_) {
-      throw new Error('استجابة الخادم ليست JSON (HTTP ' + response.status + ').');
-    }
+    try { data = JSON.parse(raw); }
+    catch (_) { throw new Error('الخادم لم يرجع بيانات تسجيل الدخول بصيغة JSON (HTTP ' + response.status + ').'); }
     if (!response.ok) throw new Error(data.error || ('HTTP ' + response.status));
+    if (typeof data.url !== 'string') throw new Error('الخادم لم يرجع رابط Google.');
     const authUrl = new URL(data.url);
     if (authUrl.origin !== 'https://accounts.google.com' ||
-        authUrl.pathname !== '/o/oauth2/v2/auth') throw new Error('رابط Google غير صالح.');
-    if (authWindow && !authWindow.closed) authWindow.location.href = authUrl.href;
-    else window.location.href = authUrl.href;
+        authUrl.pathname !== '/o/oauth2/v2/auth') {
+      throw new Error('رابط تسجيل الدخول غير صالح.');
+    }
+    window.location.assign(authUrl.href);
   } catch (error) {
     console.error('Google sign-in error:', error);
-    const detail = String(error?.message || error);
-    if (authWindow && !authWindow.closed) {
-      authWindow.document.open();
-      authWindow.document.write('<!doctype html><html lang="ar" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>تعذر تسجيل الدخول</title><body style="font:16px system-ui;padding:24px;line-height:1.7"><h2>تعذر بدء تسجيل الدخول</h2><p></p><button onclick="location.reload()">إعادة المحاولة</button><script>document.querySelector("p").textContent=' + JSON.stringify(detail) + ';</script></body></html>');
-      authWindow.document.close();
-    } else {
-      alert('تعذر بدء تسجيل الدخول: ' + detail);
-    }
     if (button) {
       button.disabled = false;
       button.textContent = 'المتابعة باستخدام Google';
     }
-    if (typeof accountMessage === 'function') accountMessage('تعذّر بدء تسجيل الدخول: ' + detail);
+    const message = 'تعذّر بدء تسجيل الدخول: ' + String(error?.message || error);
+    if (typeof accountMessage === 'function') accountMessage(message);
+    else alert(message);
   }
 }
 function openAccountModal() { openModal('account-modal'); refreshAccount(); }
