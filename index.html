@@ -199,6 +199,53 @@ body.nocoords .coord-file,body.nocoords .coord-rank{display:none}
 @media (max-width:430px){.brand span{display:none}.icon-btn{width:34px!important}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 [hidden]{display:none!important}
+
+/* Polished board rendering and low-cost interaction motion */
+:root { --motion-fast: 130ms; --motion-board: 190ms; }
+html { -webkit-tap-highlight-color: transparent; }
+body { text-rendering: optimizeLegibility; }
+button, .icon-btn, .tool-btn, .sq { touch-action: manipulation; }
+button, .icon-btn, .tool-btn {
+  transition: transform var(--motion-fast) ease, filter var(--motion-fast) ease,
+              background-color var(--motion-fast) ease, border-color var(--motion-fast) ease;
+}
+button:active, .icon-btn:active, .tool-btn:active { transform: scale(.97); }
+button:focus-visible, .icon-btn:focus-visible, .tool-btn:focus-visible {
+  outline: 2px solid var(--brass); outline-offset: 2px;
+}
+.board-container {
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: 0 12px 28px rgba(0,0,0,.30), 0 2px 7px rgba(0,0,0,.22);
+  isolation: isolate;
+}
+.sq { overflow: hidden; transition: background-color var(--motion-board) ease, box-shadow var(--motion-board) ease; }
+.sq:not(.selected):not(.last-move):hover { filter: brightness(1.055); }
+.sq.selected { box-shadow: inset 0 0 0 3px rgba(255,255,255,.82), inset 0 0 0 100px rgba(80,160,255,.24); }
+.sq.last-move { box-shadow: inset 0 0 0 100px rgba(255,214,10,.24); }
+.piece {
+  transform: translateZ(0) scale(1);
+  transform-origin: center;
+  backface-visibility: hidden;
+  animation: piece-arrive 150ms cubic-bezier(.2,.75,.25,1) both;
+}
+@keyframes piece-arrive {
+  0% { opacity: .72; transform: translateY(-2px) scale(.91); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.move-dot { background: rgba(20,30,10,.34); box-shadow: 0 0 0 1px rgba(255,255,255,.16); transform: scale(.82); animation: target-in 120ms ease-out both; }
+@keyframes target-in { from { opacity: 0; transform: scale(.35); } to { opacity: 1; transform: scale(.82); } }
+.capture-ring { box-shadow: inset 0 0 0 1px rgba(255,255,255,.16); animation: target-in 120ms ease-out both; }
+.panel, .modal-content, .coach-box { -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+@media (hover: none) { .sq:hover { filter: none; } }
+@media (max-width: 430px) {
+  .board-container { border-radius: 4px; }
+  .piece { width: 92%; height: 92%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .piece, .move-dot, .capture-ring { animation: none !important; }
+  .sq, button, .icon-btn, .tool-btn { transition: none !important; }
+}
+
 </style>
 </head>
 <body>
