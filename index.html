@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<script>
+// Keep every installation on the single canonical origin so auth cookies and API calls share one host.
+if (location.hostname !== 'ichess.pages.dev') {
+  location.replace('https://ichess.pages.dev' + location.pathname + location.search + location.hash);
+}
+</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Chess AI">
@@ -11,7 +17,7 @@
 <title>شطرنج Chess AI — تحليل ذكي، العب ضد الذكاء الاصطناعي، ألغاز يومية</title>
 <meta name="description" content="موقع شطرنج مجاني بالعربية: تحليل فوري بمحرك قوي، أفضل النقلات والأسهم، شرح لغوي للنقلات، لعب ضد الذكاء الاصطناعي بستة مستويات، لغز يومي، وحفظ دراستك سحابياً.">
 <meta name="robots" content="index,follow,max-image-preview:large">
-<link rel="canonical" href="https://YOUR-DOMAIN.pages.dev/">
+<link rel="canonical" href="https://ichess.pages.dev/">
 <meta property="og:type" content="website"><meta property="og:locale" content="ar_AR"><meta property="og:title" content="Chess AI — شطرنج وتحليل ذكي">
 <meta property="og:description" content="حلّل نقلاتك، العب ضد الذكاء الاصطناعي، وحل اللغز اليومي. يعمل كتطبيق على الآيفون والآيباد."><meta property="og:image" content="https://YOUR-DOMAIN.pages.dev/icons/icon-512.png">
 <meta name="twitter:card" content="summary">
@@ -1540,7 +1546,7 @@ async function loginWithGoogle(button) {
   // The installed app is hosted on workers.dev, while the working OAuth
   // endpoints and cookies belong to ichess.pages.dev. Navigate top-level
   // instead of fetch() to avoid cross-origin CORS failures in iOS standalone mode.
-  window.location.assign('https://ichess.pages.dev/api/auth/google');
+  window.location.assign('/api/auth/google');
 }
 function openAccountModal() { openModal('account-modal'); refreshAccount(); }
 function accountMessage(message) { const el = $('account-status'); if (el) el.textContent = message; }
