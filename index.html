@@ -1534,12 +1534,44 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) { ai
 
 /* ===== Account system: Cloudflare Pages + D1 ===== */
 let accountUser = null, accountSyncTimer = null, accountSyncBusy = false;
-function loginWithGoogle(button) {
+async function loginWithGoogle(button) {
   if (button?.disabled) return;
   if (button) { button.disabled = true; button.textContent = 'جارٍ الاتصال بـ Google…'; }
-  // The .html route avoids iOS treating the extensionless OAuth endpoint as a
-  // download. Navigate the current PWA context instead of opening a blank popup.
-  window.location.assign('/api/auth/google');
+
+  // Open a window synchronously from the tap, then send it to Google's real
+  // OAuth URL. This avoids navigating the iOS Home Screen app to an API route,
+  // which some iOS versions incorrectly present as a downloadable file.
+  const authWindow = window.open('about:blank', 'ichess_google_login');
+  try {
+    const response = await fetch('/api/auth/google', {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' },
+      cache: 'no-store',
+      credentials: 'same-origin'
+    });
+    if (!response.ok) throw new Error('Google login could not be started (' + response.status + ').');
+    const data = await response.json();
+    const authUrl = new URL(data.url);
+    if (authUrl.origin !== 'https://accounts.google.com' ||
+        authUrl.pathname !== '/o/oauth2/v2/auth') {
+      throw new Error('Invalid Google sign-in URL.');
+    }
+    if (authWindow && !authWindow.closed) {
+      authWindow.location.replace(authUrl.href);
+    } else {
+      window.location.assign(authUrl.href);
+    }
+  } catch (error) {
+    if (authWindow && !authWindow.closed) authWindow.close();
+    if (button) {
+      button.disabled = false;
+      button.textContent = 'المتابعة باستخدام Google';
+    }
+    const message = 'تعذّر بدء تسجيل الدخول. تأكد من الاتصال بالإنترنت وحاول مرة أخرى.';
+    if (typeof accountMessage === 'function') accountMessage(message);
+    else alert(message);
+    console.error('Google sign-in error:', error);
+  }
 }
 function openAccountModal() { openModal('account-modal'); refreshAccount(); }
 function accountMessage(message) { const el = $('account-status'); if (el) el.textContent = message; }
