@@ -1534,25 +1534,12 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) { ai
 
 /* ===== Account system: Cloudflare Pages + D1 ===== */
 let accountUser = null, accountSyncTimer = null, accountSyncBusy = false;
-async function loginWithGoogle(button) {
+function loginWithGoogle(button) {
   if (button?.disabled) return;
-  const originalText = button?.textContent;
   if (button) { button.disabled = true; button.textContent = 'جارٍ الاتصال بـ Google…'; }
-  try {
-    const response = await fetch('/api/auth/google', {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' },
-      credentials: 'same-origin',
-      cache: 'no-store',
-    });
-    const data = await response.json();
-    if (!response.ok || !data.url) throw new Error(data.error || 'تعذّر بدء تسجيل الدخول.');
-    // Navigate directly to Google rather than navigating to the API endpoint itself.
-    window.location.assign(data.url);
-  } catch (error) {
-    accountMessage(error.message || 'تعذّر الاتصال بـ Google. حاول مرة أخرى.');
-    if (button) { button.disabled = false; button.textContent = originalText || 'المتابعة باستخدام Google'; }
-  }
+  // Use a normal top-level navigation; Safari's installed web app can reject
+  // fetch-based OAuth handoffs with a URL pattern error.
+  window.location.href = '/api/auth/google?redirect=1';
 }
 function openAccountModal() { openModal('account-modal'); refreshAccount(); }
 function accountMessage(message) { const el = $('account-status'); if (el) el.textContent = message; }
