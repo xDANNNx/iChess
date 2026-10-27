@@ -746,7 +746,10 @@ function renderBoard() {
       if (mark) { const d = document.createElement('i'); d.className = mark === 'c' ? 'capture-ring' : 'move-dot'; el.appendChild(d); }
     }
     updateMaterialBar();
-  } catch (e) { console.error(e); $('board').innerHTML = ''; }
+  } catch (e) {
+    // Preserve the last valid board if a transient render error occurs.
+    console.error('[iChess] Board render failed; preserving current board.', e);
+  }
 }
 
 function updateMaterialBar() {
@@ -849,40 +852,49 @@ function handleSquareTap(square) {
   }
 }
 
+function animatePieceTravel(to, startRect) {
+  if (!startRect || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const endEl = document.querySelector(`[data-square="${to}"] .piece`);
+  if (!endEl || typeof endEl.animate !== 'function') return;
+  const endRect = endEl.getBoundingClientRect();
+  const dx = startRect.left - endRect.left, dy = startRect.top - endRect.top;
+  if (!Number.isFinite(dx) || !Number.isFinite(dy) || (Math.abs(dx) < 1 && Math.abs(dy) < 1)) return;
+  endEl.style.animation = 'none';
+  endEl.animate([
+    { transform: `translate(${dx}px, ${dy}px) scale(.96)` },
+    { transform: 'translate(0, 0) scale(1)' }
+  ], { duration: 230, easing: 'cubic-bezier(.2,.75,.25,1)', fill: 'both' });
+}
+
 function executeMove(from, to, promo) {
   const startEl = document.querySelector(`[data-square="${from}"] .piece`);
   const startRect = startEl ? startEl.getBoundingClientRect() : null;
+  const movingPiece = game.get(from);
   const move = game.move({ from, to, promotion: promo || 'q' });
   if (!move) return;
+  let rookStart = null, rookTo = null;
+  if (movingPiece && movingPiece.type === 'k' && move.flags && (move.flags.includes('k') || move.flags.includes('q'))) {
+    const rank = from[1], kingSide = move.flags.includes('k');
+    const rookFrom = (kingSide ? 'h' : 'a') + rank;
+    rookTo = (kingSide ? 'f' : 'd') + rank;
+    const rookEl = document.querySelector(`[data-square="${rookFrom}"] .piece`);
+    rookStart = rookEl ? rookEl.getBoundingClientRect() : null;
+  }
   playMoveSound(move);
   lastMove = { from, to };
   selectedSquare = null;
   clearAnalysis();
   let materialScore = 0;
   game.board().forEach(row => row.forEach(p => { if (p) materialScore += (p.color === 'w' ? 1 : -1) * (PIECE_VALUES[p.type] || 0); }));
-  let localEval = materialScore / 10;
+  const localEval = materialScore / 10;
   lastMoveClassification = null;
   renderBoard();
   updateTurnIndicator();
   updateEvalBar(localEval, null);
+  animatePieceTravel(to, startRect);
+  if (rookStart && rookTo) animatePieceTravel(rookTo, rookStart);
   if (puzzle) puzzleCheck(move); else autoEvaluate(true, move);
-  if (startRect) {
-    const endEl = document.querySelector(`[data-square="${to}"] .piece`);
-    if (endEl) {
-      const endRect = endEl.getBoundingClientRect();
-      const dx = startRect.left - endRect.left;
-      const dy = startRect.top - endRect.top;
-      endEl.style.transition = 'none'; endEl.style.transform = `translate(${dx}px, ${dy}px)`;
-      void endEl.offsetWidth;
-      endEl.style.transition = 'transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)';
-      endEl.style.transform = 'translate(0, 0)';
-      setTimeout(() => { if (endEl) endEl.style.transition = ''; }, 200);
-    }
-  }
-  // ← تشغيل الذكاء الاصطناعي بعد نقلة اللاعب
-  if (settings.aiEnabled && !isEditMode && !puzzle) {
-    setTimeout(maybeAIPlay, 600);
-  }
+  if (settings.aiEnabled && !isEditMode && !puzzle) setTimeout(maybeAIPlay, 600);
 }
 
 function askPromotion(color) {
