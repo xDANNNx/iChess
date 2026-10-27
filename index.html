@@ -1544,7 +1544,6 @@ async function loginWithGoogle(button) {
       headers: { 'Accept': 'application/json' },
       credentials: 'same-origin',
       cache: 'no-store',
-      redirect: 'error'
     });
     const data = await response.json();
     if (!response.ok || !data.url) throw new Error(data.error || 'تعذّر بدء تسجيل الدخول.');
