@@ -1538,39 +1538,47 @@ async function loginWithGoogle(button) {
   if (button?.disabled) return;
   if (button) { button.disabled = true; button.textContent = 'جارٍ الاتصال بـ Google…'; }
 
-  // Open a window synchronously from the tap, then send it to Google's real
-  // OAuth URL. This avoids navigating the iOS Home Screen app to an API route,
-  // which some iOS versions incorrectly present as a downloadable file.
-  const authWindow = window.open('about:blank', 'ichess_google_login');
+  // Open synchronously during the tap so iOS does not block the sign-in window.
+  const authWindow = window.open('about:blank', '_blank');
+  if (authWindow) {
+    try {
+      authWindow.document.title = 'Google Sign-In';
+      authWindow.document.body.textContent = 'جارٍ الاتصال بـ Google…';
+    } catch (_) {}
+  }
   try {
-    const response = await fetch('/api/auth/google', {
+    const response = await fetch('/api/auth/google-url', {
       method: 'GET',
-      headers: { 'Accept': 'application/json' },
       cache: 'no-store',
-      credentials: 'same-origin'
+      credentials: 'same-origin',
+      headers: { 'Accept': 'application/json' }
     });
-    if (!response.ok) throw new Error('Google login could not be started (' + response.status + ').');
-    const data = await response.json();
+    const raw = await response.text();
+    let data;
+    try { data = JSON.parse(raw); } catch (_) {
+      throw new Error('استجابة الخادم ليست JSON (HTTP ' + response.status + ').');
+    }
+    if (!response.ok) throw new Error(data.error || ('HTTP ' + response.status));
     const authUrl = new URL(data.url);
     if (authUrl.origin !== 'https://accounts.google.com' ||
-        authUrl.pathname !== '/o/oauth2/v2/auth') {
-      throw new Error('Invalid Google sign-in URL.');
-    }
-    if (authWindow && !authWindow.closed) {
-      authWindow.location.replace(authUrl.href);
-    } else {
-      window.location.assign(authUrl.href);
-    }
+        authUrl.pathname !== '/o/oauth2/v2/auth') throw new Error('رابط Google غير صالح.');
+    if (authWindow && !authWindow.closed) authWindow.location.href = authUrl.href;
+    else window.location.href = authUrl.href;
   } catch (error) {
-    if (authWindow && !authWindow.closed) authWindow.close();
+    console.error('Google sign-in error:', error);
+    const detail = String(error?.message || error);
+    if (authWindow && !authWindow.closed) {
+      authWindow.document.open();
+      authWindow.document.write('<!doctype html><html lang="ar" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>تعذر تسجيل الدخول</title><body style="font:16px system-ui;padding:24px;line-height:1.7"><h2>تعذر بدء تسجيل الدخول</h2><p></p><button onclick="location.reload()">إعادة المحاولة</button><script>document.querySelector("p").textContent=' + JSON.stringify(detail) + ';</script></body></html>');
+      authWindow.document.close();
+    } else {
+      alert('تعذر بدء تسجيل الدخول: ' + detail);
+    }
     if (button) {
       button.disabled = false;
       button.textContent = 'المتابعة باستخدام Google';
     }
-    const message = 'تعذّر بدء تسجيل الدخول. تأكد من الاتصال بالإنترنت وحاول مرة أخرى.';
-    if (typeof accountMessage === 'function') accountMessage(message);
-    else alert(message);
-    console.error('Google sign-in error:', error);
+    if (typeof accountMessage === 'function') accountMessage('تعذّر بدء تسجيل الدخول: ' + detail);
   }
 }
 function openAccountModal() { openModal('account-modal'); refreshAccount(); }
