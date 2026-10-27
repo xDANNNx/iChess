@@ -496,50 +496,78 @@ function initAudio() {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       masterGain = audioCtx.createGain();
       const comp = audioCtx.createDynamicsCompressor();
+      comp.threshold.value = -20; comp.knee.value = 18; comp.ratio.value = 4;
+      comp.attack.value = 0.004; comp.release.value = 0.18;
       masterGain.connect(comp); comp.connect(audioCtx.destination);
     }
     if (audioCtx.state === 'suspended') audioCtx.resume();
-    masterGain.gain.value = settings.vol;
+    masterGain.gain.setTargetAtTime(Math.max(0, Math.min(1, Number(settings.vol) || 0)) * 0.62, audioCtx.currentTime, 0.025);
     return audioCtx;
   } catch (e) { return null; }
 }
 function playNoise(ctx, time, duration, freq, q, vol) {
-  const bufferSize = Math.floor(ctx.sampleRate * duration);
-  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const size = Math.max(1, Math.floor(ctx.sampleRate * duration));
+  const buffer = ctx.createBuffer(1, size, ctx.sampleRate);
   const data = buffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 3);
+  for (let i = 0; i < size; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / size, 4);
   const src = ctx.createBufferSource(); src.buffer = buffer;
-  const filter = ctx.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = freq; filter.Q.value = q;
-  const gain = ctx.createGain(); gain.gain.value = vol;
-  src.connect(filter); filter.connect(gain); gain.connect(masterGain); src.start(time);
+  const filter = ctx.createBiquadFilter(); filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(freq, time); filter.Q.value = q;
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.0001, time);
+  gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol), time + Math.min(0.012, duration * 0.35));
+  gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+  src.connect(filter); filter.connect(gain); gain.connect(masterGain);
+  src.start(time); src.stop(time + duration + 0.01);
 }
 function playTone(ctx, time, duration, freqStart, freqEnd, vol, type = 'sine') {
-  const osc = ctx.createOscillator(); const gain = ctx.createGain();
-  osc.type = type; osc.frequency.setValueAtTime(freqStart, time);
-  if (freqEnd && freqEnd !== freqStart) osc.frequency.exponentialRampToValueAtTime(freqEnd, time + duration);
-  gain.gain.setValueAtTime(vol, time); gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+  const osc = ctx.createOscillator(), gain = ctx.createGain();
+  osc.type = type; osc.frequency.setValueAtTime(Math.max(1, freqStart), time);
+  if (freqEnd && freqEnd !== freqStart) osc.frequency.exponentialRampToValueAtTime(Math.max(1, freqEnd), time + duration);
+  gain.gain.setValueAtTime(0.0001, time);
+  gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol), time + Math.min(0.009, duration * 0.3));
+  gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
   osc.connect(gain); gain.connect(masterGain); osc.start(time); osc.stop(time + duration + 0.02);
 }
-const PIECE_WEIGHT = { p: 1.1, n: 1, b: .97, r: .92, q: .88, k: .8 };
-
+const PIECE_WEIGHT = { p: 1.08, n: 1, b: .98, r: .94, q: .9, k: .86 };
 function playSound(type, moveObj) {
   triggerHaptic(type);
   if (!settings.sound || settings.vol <= 0) return;
   const ctx = initAudio(); if (!ctx) return;
-  const t = ctx.currentTime + 0.005;
-  const weight = ((moveObj && PIECE_WEIGHT[moveObj.piece]) || 1) * (0.97 + Math.random() * 0.06);
-  const playTap = (offset, vol) => { playNoise(ctx, t + offset, 0.07, 1700 * weight, 1.4, 0.9 * vol); playTone(ctx, t + offset, 0.09, 230 * weight, 95 * weight, 0.8 * vol); };
+  const t = ctx.currentTime + 0.012;
+  const w = (moveObj && PIECE_WEIGHT[moveObj.piece]) || 1;
+  const note = (dt, d, a, b, v, wave = 'sine') => playTone(ctx, t + dt, d, a * w, b * w, v, wave);
+  const click = (dt = 0, strength = 1) => {
+    playNoise(ctx, t + dt, 0.045, 2100 * w, 1.8, 0.12 * strength);
+    note(dt, 0.075, 420, 190, 0.16 * strength, 'triangle');
+  };
   switch (type) {
-    case 'move': playTap(0, 1); break;
-    case 'capture': playNoise(ctx, t, 0.12, 1100 * weight, 0.9, 1.2); playTone(ctx, t, 0.14, 170 * weight, 60 * weight, 1); playTap(0.045, 0.9); break;
-    case 'check': playTap(0, 1); playTone(ctx, t + 0.04, 0.22, 988, 988, 0.25, 'triangle'); playTone(ctx, t + 0.04, 0.22, 1318, 1318, 0.12, 'triangle'); break;
-    case 'castle': playTap(0, 1); playTap(0.1, 0.9); break;
-    case 'promote': playTap(0, 0.8); [523, 659, 784, 1047].forEach((f, i) => playTone(ctx, t + 0.08 + i * 0.07, 0.25, f, f, 0.22, 'triangle')); break;
-    case 'end': playTap(0, 1); [392, 330, 262].forEach((f, i) => { playTone(ctx, t + 0.15 + i * 0.2, 0.9, f, f * 0.99, 0.3); playTone(ctx, t + 0.15 + i * 0.2, 0.6, f * 2, f * 2, 0.1); }); break;
-    case 'illegal': playTone(ctx, t, 0.09, 130, 110, 0.25, 'square'); playTone(ctx, t + 0.11, 0.09, 130, 110, 0.25, 'square'); break;
+    case 'move':
+      click(0, 0.9); note(0.008, 0.055, 680, 520, 0.045, 'sine'); break;
+    case 'capture':
+      playNoise(ctx, t, 0.085, 900 * w, 1.1, 0.2);
+      note(0, 0.12, 205, 72, 0.22, 'triangle'); click(0.035, 0.65); break;
+    case 'check':
+      click(0, 0.9); note(0.035, 0.16, 740, 740, 0.11, 'triangle');
+      note(0.09, 0.2, 988, 988, 0.09, 'sine'); break;
+    case 'castle':
+      click(0, 0.75); click(0.105, 0.75); note(0.025, 0.15, 460, 700, 0.055, 'sine'); break;
+    case 'promote':
+      click(0, 0.8);
+      [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => note(0.045 + i * 0.065, 0.19, f, f * 1.008, 0.105, 'sine'));
+      break;
+    case 'end':
+      [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => note(i * 0.13, 0.32, f, f * 0.995, 0.105, 'triangle'));
+      break;
+    case 'draw':
+      [523.25, 466.16, 392].forEach((f, i) => note(i * 0.17, 0.25, f, f * 0.995, 0.09, 'sine'));
+      break;
+    case 'illegal':
+      note(0, 0.075, 185, 145, 0.13, 'triangle'); note(0.095, 0.075, 145, 115, 0.11, 'triangle'); break;
+    case 'ui':
+      note(0, 0.045, 620, 760, 0.055, 'sine'); break;
   }
 }
-
 function playMoveSound(move) {
   if (game.in_checkmate()) return playSound('end', move);
   if (game.in_stalemate() || game.in_draw()) return playSound('draw', move);
