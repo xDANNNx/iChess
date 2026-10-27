@@ -36,7 +36,7 @@ export async function onRequestGet({ request, env }) {
 
   // The installed iOS web app can mis-handle navigation to this endpoint as a file.
   // Return the OAuth URL to the app so it can navigate directly to Google's domain.
-  if (request.headers.get('Accept')?.includes('application/json')) {
+  if (new URL(request.url).searchParams.get('redirect') !== '1' && request.headers.get('Accept')?.includes('application/json')) {
     headers.set('Content-Type', 'application/json; charset=utf-8');
     return new Response(JSON.stringify({ url: target.toString() }), { status: 200, headers });
   }
