@@ -246,6 +246,22 @@ button:focus-visible, .icon-btn:focus-visible, .tool-btn:focus-visible {
   .sq, button, .icon-btn, .tool-btn { transition: none !important; }
 }
 
+
+/* Layering fix: keep board overlays inside their intended stacking layers. */
+.board-container { position: relative; isolation: isolate; }
+.board { position: relative; z-index: 1; }
+.sq { overflow: visible; isolation: auto; }
+.sq[class*="sq-"]::before,
+.sq[class*="sq-"]::after { content: none !important; display: none !important; }
+.sq .piece { position: relative; z-index: 3; pointer-events: none; }
+.sq .coord-file, .sq .coord-rank { z-index: 6; }
+.sq .move-dot, .sq .capture-ring { z-index: 5; }
+.sq .move-badge-overlay { z-index: 8; }
+.sq.sq-in-check { z-index: auto; }
+.sq.sq-in-check .piece { filter: drop-shadow(0 0 5px rgba(239,83,80,.7)); }
+.arrows { z-index: 7; }
+.checkmate-overlay { z-index: 30; }
+
 </style>
 </head>
 <body>
