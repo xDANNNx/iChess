@@ -442,7 +442,7 @@ try {
   settings = { ...settings, ...saved, ph: { ...settings.ph, ...(saved.ph || {}) } };
 } catch (e) { console.warn("Could not load settings"); }
 
-const saveSettings = () => { try { localStorage.setItem('chess_ai_settings', JSON.stringify(settings)); } catch (e) {} if (typeof scheduleAccountSync === 'function') scheduleAccountSync(); };
+const saveSettings = () => { try { localStorage.setItem('chess_ai_settings', JSON.stringify(settings)); localStorage.setItem('chess_ai_settings_updated', String(Date.now())); } catch (e) {} if (typeof scheduleAccountSync === 'function') scheduleAccountSync(); };
 
 let selectedSquare = null;
 let isBoardFlipped = false;
@@ -1578,9 +1578,9 @@ async function accountLogout() {
   try { await fetch('/api/auth/logout', { method:'POST', credentials:'same-origin' }); } catch {}
   accountUser = null; renderAccount(null); showToast('تم تسجيل الخروج');
 }
-function scheduleAccountSync() { if (!accountUser || accountSyncBusy) return; clearTimeout(accountSyncTimer); accountSyncTimer = setTimeout(() => accountSync(false), 20000); }
+function scheduleAccountSync() { if (!accountUser || accountSyncBusy) return; clearTimeout(accountSyncTimer); accountSyncTimer = setTimeout(() => accountSync(false), 120000); }
 function localAccountPayload() {
-  return { settings, games:getGames(), progress:{ learnedPositions:Object.keys(learnedDB).length }, learnedDB };
+  return { settings, games:getGames(), progress:{ learnedPositions:Object.keys(learnedDB).length, settingsUpdatedAt:+(localStorage.getItem('chess_ai_settings_updated')||0) }, learnedDB };
 }
 async function syncAccountData(initialUpload) {
   if (!accountUser || accountSyncBusy) return;
@@ -1595,9 +1595,11 @@ async function syncAccountData(initialUpload) {
       const put = await fetch('/api/account/data', { method:'PUT', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body:JSON.stringify(localAccountPayload()) });
       if (!put.ok) throw new Error('save');
     } else {
-      if (remote.settings && Object.keys(remote.settings).length) {
+      const localSettingsUpdated = +(localStorage.getItem('chess_ai_settings_updated') || 0);
+      const remoteSettingsUpdated = +(remote.progress?.settingsUpdatedAt || 0);
+      if (remote.settings && Object.keys(remote.settings).length && remoteSettingsUpdated > localSettingsUpdated) {
         settings = { ...settings, ...remote.settings, ph:{ ...(settings.ph || {}), ...((remote.settings || {}).ph || {}) } };
-        try { localStorage.setItem('chess_ai_settings', JSON.stringify(settings)); } catch {}
+        try { localStorage.setItem('chess_ai_settings', JSON.stringify(settings)); localStorage.setItem('chess_ai_settings_updated', String(remoteSettingsUpdated)); } catch {}
         buildSettingsUI();
       }
       const localGames = getGames(), gameMap = new Map();
@@ -1657,7 +1659,13 @@ if (authQuery) { history.replaceState({}, '', location.pathname); setTimeout(() 
 fetch('/api/auth/me', { credentials:'same-origin', cache:'no-store' }).then(r=>r.json()).then(async d=>{ if (d.user) { renderAccount(d.user); memReady.then(() => syncAccountData(false)); } }).catch(()=>{});
 buildSettingsUI(); initEditPalette(); renderBoard(); updateTurnIndicator(); updateEvalBar(0);
 memReady.then(() => autoEvaluate());
-memReady.then(() => setTimeout(cloudSync, 1500));
+memReady.then(() => setTimeout(() => { if (accountUser) accountSync(false); else cloudSync(); }, 1500));
+// Keep cloud data current every two minutes while the app is open; local settings remain saved immediately.
+setInterval(() => {
+  if (document.visibilityState !== 'visible') return;
+  if (accountUser) accountSync(false); else cloudSync();
+}, 120000);
+addEventListener('pagehide', () => { if (accountUser) accountSync(false); else cloudSync(); });
 if (settings.aiEnabled) setTimeout(maybeAIPlay, 700);
 </script>
 </body>
