@@ -1540,7 +1540,7 @@ function loginWithGoogle(button) {
   if (button) { button.disabled = true; button.textContent = 'جارٍ الاتصال بـ Google…'; }
   // Open OAuth as a user-initiated new browsing context. iOS standalone PWAs
   // can treat same-window navigation to this endpoint as a file download.
-  const authWindow = window.open('/api/auth/google?redirect=1', '_blank');
+  const authWindow = window.open('/api/auth/google.html?redirect=1', '_blank');
   if (!authWindow) {
     if (button) { button.disabled = false; button.textContent = originalText || 'المتابعة باستخدام Google'; }
     accountMessage('تعذّر فتح نافذة تسجيل الدخول. افتح الموقع في Safari وجرّب مرة أخرى.');
