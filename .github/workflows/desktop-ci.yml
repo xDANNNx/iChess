@@ -1,16 +1,15 @@
 name: iChess Desktop CI
 
 on:
-  push:
-    branches: [desktop-foundation]
-    paths:
-      - 'desktop/**'
-      - '.github/workflows/desktop-ci.yml'
   pull_request:
     paths:
       - 'desktop/**'
       - '.github/workflows/desktop-ci.yml'
   workflow_dispatch:
+
+concurrency:
+  group: ichess-desktop-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -34,12 +33,12 @@ jobs:
         run: npm test
       - name: Build renderer
         run: npm run build
-      - name: Package Windows installer and portable build
+      - name: Package Windows installer (single EXE)
         run: npm run dist:win
       - name: Upload Windows build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: iChess-Desktop-Windows
-          path: desktop/release/*
+          path: desktop/release/*.exe
           if-no-files-found: error
           retention-days: 14
