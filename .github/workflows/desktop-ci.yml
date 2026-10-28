@@ -1,0 +1,47 @@
+name: iChess Desktop CI
+
+on:
+  push:
+    branches: [desktop-foundation]
+    paths:
+      - 'desktop/**'
+      - '.github/workflows/desktop-ci.yml'
+  pull_request:
+    paths:
+      - 'desktop/**'
+      - '.github/workflows/desktop-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - name: Install dependencies
+        run: npm install
+      - name: Run chess rules tests
+        run: npm test
+      - name: Build renderer
+        run: npm run build
+      - name: Package Windows installer and portable build
+        run: npm run dist:win
+      - name: Upload Windows build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: iChess-Desktop-Windows
+          path: desktop/release/*
+          if-no-files-found: error
+          retention-days: 14
