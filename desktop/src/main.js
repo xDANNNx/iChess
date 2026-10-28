@@ -22,7 +22,8 @@ function applyLanguage(){
  const toggle=$('#language-toggle');if(toggle){toggle.textContent=ar?'English':'العربية';toggle.setAttribute('aria-label',ar?'Switch to English':'التبديل إلى العربية');}
 }
 $('#language-toggle').addEventListener('click',()=>{language=language==='en'?'ar':'en';localStorage.setItem('ichess.language',language);renderAll();applyLanguage();});
-\n// Local-first extras: synthesized move sounds, themes, PGN/FEN import, and a persistent PGN library.
+
+// Local-first extras: synthesized move sounds, themes, PGN/FEN import, and a persistent PGN library.
 const libraryKey='ichess.desktop.games.v1';
 function playTone(kind='move'){
  if(!soundEnabled)return;
