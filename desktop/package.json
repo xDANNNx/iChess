@@ -13,7 +13,7 @@
     "electron:dev": "wait-on http://127.0.0.1:5173 && cross-env ICHESS_DEV_URL=http://127.0.0.1:5173 electron .",
     "build": "vite build",
     "app:dir": "npm run build && electron-builder --dir",
-    "dist:win": "npm run build && electron-builder --win nsis portable",
+    "dist:win": "npm run build && electron-builder --win nsis",
     "test": "node --test"
   },
   "dependencies": {
@@ -41,8 +41,7 @@
     "asar": true,
     "win": {
       "target": [
-        "nsis",
-        "portable"
+        "nsis"
       ]
     },
     "nsis": {
@@ -50,9 +49,6 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true
-    },
-    "portable": {
-      "artifactName": "iChess-Desktop-${version}-Portable.${ext}"
     },
     "artifactName": "iChess-Desktop-${version}-${arch}.${ext}"
   }
