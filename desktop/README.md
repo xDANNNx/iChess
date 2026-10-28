@@ -14,7 +14,7 @@ Independent Windows-first chess workstation, developed separately from the hoste
 - Run `npm install`, `npm test`, and `npm run app:dev` from this folder.
 - Build Windows installer and portable release with `npm run dist:win`.
 
-The repository connector cannot execute the Windows packaging pipeline by itself. A successful GitHub commit does not mean an installer has been built or tested. Use a Windows CI runner to produce and verify release artifacts.
+A Windows CI workflow is configured to run the tests, build the renderer, package the installer and portable app, and upload the resulting artifacts when the pipeline succeeds. A successful commit alone does not mean an installer has been built or tested.
 
 ## Planned phases
 1. Foundation and local board.
