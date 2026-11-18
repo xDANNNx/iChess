@@ -201,47 +201,6 @@ body.nocoords .coord-file,body.nocoords .coord-rank{display:none}
 .coach-box .ln.book-line{border-color:rgba(224,176,74,.55)}
 .coach-box .side-label{color:var(--muted);font-size:10px;font-weight:700}
 
-
-/* Smooth chess-specific motion system */
-:root { --fx-ease: cubic-bezier(.2,.75,.25,1); }
-.sq { transition: background-color .18s var(--fx-ease), box-shadow .22s var(--fx-ease), filter .18s var(--fx-ease); }
-.sq.selected { box-shadow: inset 0 0 0 3px rgba(255,215,0,.88), inset 0 0 22px rgba(255,215,0,.18); animation: squareSelect .72s ease-in-out infinite alternate; z-index: 4; }
-@keyframes squareSelect { from { box-shadow: inset 0 0 0 2px rgba(255,215,0,.55), inset 0 0 8px rgba(255,215,0,.10); } to { box-shadow: inset 0 0 0 3px rgba(255,215,0,.95), inset 0 0 18px rgba(255,215,0,.28); } }
-.sq.last-move { transition: box-shadow .24s ease, background-color .24s ease; }
-.sq.fx-origin { animation: originFade .42s ease-out; }
-.sq.fx-arrival { animation: arrivalGlow .58s var(--fx-ease); }
-.sq.fx-capture { animation: captureImpact .48s var(--fx-ease); z-index: 6; }
-.sq.fx-promotion { animation: promotionGlow .85s var(--fx-ease); z-index: 6; }
-@keyframes originFade { 0% { box-shadow: inset 0 0 0 4px rgba(255,215,0,.95); } 100% { box-shadow: inset 0 0 0 0 rgba(255,215,0,0); } }
-@keyframes arrivalGlow { 0% { box-shadow: inset 0 0 0 0 rgba(255,255,255,0); } 35% { box-shadow: inset 0 0 0 5px rgba(255,255,255,.72), inset 0 0 24px rgba(255,215,0,.42); } 100% { box-shadow: inset 0 0 0 1px rgba(255,255,255,0); } }
-@keyframes captureImpact { 0% { transform: scale(1); filter:brightness(1); } 28% { transform: scale(.91); filter:brightness(1.55); } 62% { transform: scale(1.035); } 100% { transform: scale(1); filter:brightness(1); } }
-@keyframes promotionGlow { 0% { box-shadow: inset 0 0 0 0 rgba(224,176,74,0); } 45% { box-shadow: inset 0 0 0 5px rgba(255,215,0,.95), inset 0 0 28px rgba(255,215,0,.45); } 100% { box-shadow: inset 0 0 0 0 rgba(255,215,0,0); } }
-.capture-burst { position:absolute; inset:12%; z-index:8; border:3px solid rgba(255,255,255,.88); border-radius:50%; pointer-events:none; animation:captureBurst .58s ease-out forwards; }
-@keyframes captureBurst { from { opacity:.9; transform:scale(.25); } to { opacity:0; transform:scale(1.65); } }
-.sq.sq-in-check { animation: checkPulse .72s ease-in-out infinite alternate, checkShake .32s ease-in-out 1; }
-@keyframes checkShake { 0%,100% { transform:translateX(0); } 25% { transform:translateX(-1px); } 75% { transform:translateX(1px); } }
-.sq.sq-in-check .piece { filter:drop-shadow(0 0 5px #ff3939) drop-shadow(0 0 11px rgba(255,40,40,.55)); animation: kingThreat .72s ease-in-out infinite alternate; }
-@keyframes kingThreat { from { transform:scale(1); } to { transform:scale(1.045); } }
-.arrows line { transition:opacity .18s ease, stroke-width .18s ease; filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.62)); }
-.arrows line.arrow-enter { stroke-dasharray:12; stroke-dashoffset:12; animation: arrowDraw .28s ease-out forwards, arrowBreath 2.4s ease-in-out .28s 2 alternate; }
-.arrows line.arrow-best { filter:drop-shadow(0 1px 2px rgba(0,0,0,.72)) drop-shadow(0 0 2px rgba(255,215,0,.32)); }
-.arrows line.arrow-good { filter:drop-shadow(0 1px 2px rgba(0,0,0,.72)); }
-.arrows line.arrow-normal { filter:drop-shadow(0 1px 2px rgba(0,0,0,.72)); }
-@keyframes arrowDraw { to { stroke-dashoffset:0; } }
-@keyframes arrowBreath { from { opacity:.68; } to { opacity:1; } }
-.checkmate-overlay.show { animation:fadeIn .42s ease-out; }
-.checkmate-icon { animation:popIn .65s cubic-bezier(.17,.89,.32,1.28), crownGlow 1.8s ease-in-out .65s infinite alternate; }
-@keyframes crownGlow { from { filter:drop-shadow(0 0 4px rgba(255,215,0,.25)); } to { filter:drop-shadow(0 0 19px rgba(255,215,0,.85)); } }
-#turn-indicator { transition:color .22s ease, background-color .22s ease; }
-#turn-indicator.turn-change-fx { animation:turnArrive .34s ease-out; }
-@keyframes turnArrive { from { transform:translateY(3px); opacity:.65; } to { transform:translateY(0); opacity:1; } }
-#turn-indicator.ai-thinking-fx { color:var(--brass); animation:aiThinkingPulse .9s ease-in-out infinite alternate; }
-@keyframes aiThinkingPulse { from { opacity:.72; } to { opacity:1; text-shadow:0 0 12px rgba(224,176,74,.4); } }
-.btn-analyze, .icon-btn, .tool-btn, .list-btn, .close-btn { transition:transform .16s var(--fx-ease), filter .16s ease, background-color .16s ease; }
-button:active { transform:scale(.975); }
-.motion-off *, .system-reduced-motion * { animation:none !important; transition:none !important; scroll-behavior:auto !important; }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; } }
-
 </style>
 </head>
 <body>
@@ -288,13 +247,13 @@ button:active { transform:scale(.975); }
         <div class="board" id="board"></div>
         <svg class="arrows" viewBox="0 0 8 8">
           <defs>
-            <marker id="arrow-gold" markerUnits="userSpaceOnUse" markerWidth=".34" markerHeight=".34" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#FFD700"/></marker>
-            <marker id="arrow-blue" markerUnits="userSpaceOnUse" markerWidth=".30" markerHeight=".30" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#5b9bf0"/></marker>
-            <marker id="arrow-green" markerUnits="userSpaceOnUse" markerWidth=".28" markerHeight=".28" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#58b878"/></marker>
+            <marker id="arrow-gold" markerWidth="3" markerHeight="3" refX="1.2" refY="1.5" orient="auto"><path d="M0 0 3 1.5 0 3z" fill="#FFD700"/></marker>
+            <marker id="arrow-blue" markerWidth="3" markerHeight="3" refX="1.2" refY="1.5" orient="auto"><path d="M0 0 3 1.5 0 3z" fill="#5b9bf0"/></marker>
+            <marker id="arrow-green" markerWidth="3" markerHeight="3" refX="1.2" refY="1.5" orient="auto"><path d="M0 0 3 1.5 0 3z" fill="#58b878"/></marker>
           </defs>
-          <line id="arrow-alt" class="analysis-arrow arrow-good" stroke="#5b9bf0" stroke-width=".105" stroke-linecap="round" marker-end="url(#arrow-blue)" opacity=".92" style="display:none"/>
-          <line id="arrow-best" class="analysis-arrow arrow-best" stroke="#FFD700" stroke-width=".135" stroke-linecap="round" marker-end="url(#arrow-gold)" opacity=".98" style="display:none"/>
-          <line id="arrow-third" class="analysis-arrow arrow-normal" stroke="#58b878" stroke-width=".095" stroke-linecap="round" marker-end="url(#arrow-green)" opacity=".90" style="display:none"/>
+          <line id="arrow-alt" stroke="#5b9bf0" stroke-width=".16" stroke-linecap="round" marker-end="url(#arrow-blue)" opacity=".85" style="display:none"/>
+          <line id="arrow-best" stroke="#FFD700" stroke-width=".2" stroke-linecap="round" marker-end="url(#arrow-gold)" opacity=".95" style="display:none"/>
+          <line id="arrow-third" stroke="#58b878" stroke-width=".16" stroke-linecap="round" marker-end="url(#arrow-green)" opacity=".85" style="display:none"/>
         </svg>
         <div class="checkmate-overlay" id="checkmate-overlay">
           <i class="fa-solid fa-crown checkmate-icon"></i>
@@ -520,10 +479,8 @@ function initAudio() {
       const comp = audioCtx.createDynamicsCompressor();
       masterGain.connect(comp); comp.connect(audioCtx.destination);
     }
-    if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
-    const targetVolume = Math.max(0, Math.min(1, Number(settings.vol) || 0));
-    masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
-    masterGain.gain.setTargetAtTime(targetVolume, audioCtx.currentTime, 0.025);
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    masterGain.gain.value = settings.vol;
     return audioCtx;
   } catch (e) { return null; }
 }
@@ -534,46 +491,33 @@ function playNoise(ctx, time, duration, freq, q, vol) {
   for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 3);
   const src = ctx.createBufferSource(); src.buffer = buffer;
   const filter = ctx.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = freq; filter.Q.value = q;
-  const gain = ctx.createGain();
-  gain.gain.setValueAtTime(0.0001, time);
-  gain.gain.linearRampToValueAtTime(Math.max(0.0001, vol), time + Math.min(0.012, duration * 0.25));
-  gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
-  src.connect(filter); filter.connect(gain); gain.connect(masterGain); src.start(time); src.stop(time + duration + 0.01);
+  const gain = ctx.createGain(); gain.gain.value = vol;
+  src.connect(filter); filter.connect(gain); gain.connect(masterGain); src.start(time);
 }
 function playTone(ctx, time, duration, freqStart, freqEnd, vol, type = 'sine') {
   const osc = ctx.createOscillator(); const gain = ctx.createGain();
   osc.type = type; osc.frequency.setValueAtTime(freqStart, time);
   if (freqEnd && freqEnd !== freqStart) osc.frequency.exponentialRampToValueAtTime(freqEnd, time + duration);
-  gain.gain.setValueAtTime(0.0001, time);
-  gain.gain.linearRampToValueAtTime(Math.max(0.0001, Math.min(0.8, vol)), time + Math.min(0.01, duration * 0.2));
-  gain.gain.exponentialRampToValueAtTime(0.0001, time + Math.max(0.025, duration));
+  gain.gain.setValueAtTime(vol, time); gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
   osc.connect(gain); gain.connect(masterGain); osc.start(time); osc.stop(time + duration + 0.02);
 }
 const PIECE_WEIGHT = { p: 1.1, n: 1, b: .97, r: .92, q: .88, k: .8 };
 
 function playSound(type, moveObj) {
-  const hapticType = ({ move: 'move', capture: 'capture', check: 'check', castle: 'castle', promote: 'promote', illegal: 'illegal', end: 'end', draw: 'medium', start: 'light', undo: 'light', select: 'light', button: 'light', threat: 'check', ai: 'light' })[type] || 'light';
-  triggerHaptic(hapticType);
+  triggerHaptic(type);
   if (!settings.sound || settings.vol <= 0) return;
   const ctx = initAudio(); if (!ctx) return;
-  const t = ctx.currentTime + 0.008;
+  const t = ctx.currentTime + 0.005;
   const weight = ((moveObj && PIECE_WEIGHT[moveObj.piece]) || 1) * (0.97 + Math.random() * 0.06);
   const playTap = (offset, vol) => { playNoise(ctx, t + offset, 0.07, 1700 * weight, 1.4, 0.9 * vol); playTone(ctx, t + offset, 0.09, 230 * weight, 95 * weight, 0.8 * vol); };
   switch (type) {
     case 'move': playTap(0, 1); break;
     case 'capture': playNoise(ctx, t, 0.12, 1100 * weight, 0.9, 1.2); playTone(ctx, t, 0.14, 170 * weight, 60 * weight, 1); playTap(0.045, 0.9); break;
-    case 'check': playTap(0, 0.72); playTone(ctx, t + 0.025, 0.24, 784, 659, 0.22, 'triangle'); playTone(ctx, t + 0.075, 0.28, 1046, 880, 0.13, 'sine'); break;
+    case 'check': playTap(0, 1); playTone(ctx, t + 0.04, 0.22, 988, 988, 0.25, 'triangle'); playTone(ctx, t + 0.04, 0.22, 1318, 1318, 0.12, 'triangle'); break;
     case 'castle': playTap(0, 1); playTap(0.1, 0.9); break;
     case 'promote': playTap(0, 0.8); [523, 659, 784, 1047].forEach((f, i) => playTone(ctx, t + 0.08 + i * 0.07, 0.25, f, f, 0.22, 'triangle')); break;
     case 'end': playTap(0, 1); [392, 330, 262].forEach((f, i) => { playTone(ctx, t + 0.15 + i * 0.2, 0.9, f, f * 0.99, 0.3); playTone(ctx, t + 0.15 + i * 0.2, 0.6, f * 2, f * 2, 0.1); }); break;
     case 'illegal': playTone(ctx, t, 0.09, 130, 110, 0.25, 'square'); playTone(ctx, t + 0.11, 0.09, 130, 110, 0.25, 'square'); break;
-    case 'draw': [440, 392, 330].forEach((f, i) => playTone(ctx, t + i * 0.16, 0.22, f, f * 0.985, 0.20, 'triangle')); break;
-    case 'start': [392, 523, 659].forEach((f, i) => playTone(ctx, t + i * 0.075, 0.18, f, f * 1.01, 0.16, 'sine')); break;
-    case 'undo': playTone(ctx, t, 0.12, 520, 330, 0.16, 'triangle'); break;
-    case 'select': playTone(ctx, t, 0.045, 620, 700, 0.07, 'sine'); break;
-    case 'button': playTone(ctx, t, 0.055, 480, 420, 0.07, 'sine'); break;
-    case 'threat': playTone(ctx, t, 0.18, 740, 520, 0.18, 'triangle'); playTone(ctx, t + 0.10, 0.22, 880, 660, 0.13, 'sine'); break;
-    case 'ai': playTone(ctx, t, 0.10, 360, 520, 0.10, 'sine'); break;
   }
 }
 
@@ -583,13 +527,7 @@ function playMoveSound(move) {
   playSound(move.promotion ? 'promote' : game.in_check() ? 'check' : move.captured ? 'capture' : /[kq]/.test(move.flags) ? 'castle' : 'move', move);
 }
 
-function unlockChessAudio() {
-  if (!settings.sound) return;
-  const ctx = initAudio();
-  if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
-}
-document.addEventListener('pointerdown', unlockChessAudio, { once: true, passive: true });
-document.addEventListener('touchstart', unlockChessAudio, { once: true, passive: true });
+document.addEventListener('pointerdown', () => initAudio(), { once: true });
 let toastTimeout;
 function showToast(msg) {
   triggerHaptic('light');
@@ -976,7 +914,7 @@ function buildSettingsUI() {
   document.documentElement.style.setProperty('--light', theme[1]);
   document.documentElement.style.setProperty('--dark', theme[2]);
 }
-function toggleSound() { triggerHaptic('light'); settings.sound = !settings.sound; saveSettings(); buildSettingsUI(); if (settings.sound) playSound('button'); }
+function toggleSound() { triggerHaptic('light'); settings.sound = !settings.sound; saveSettings(); buildSettingsUI(); playSound('move'); }
 function toggleHaptic() { settings.haptic = !settings.haptic; saveSettings(); buildSettingsUI(); if (settings.haptic) triggerHaptic('light'); }
 
 /* =========================================
@@ -1206,6 +1144,7 @@ async function analyzePosition() {
     updateEvalBar(rd.ev, rd.mate);
     generateCoachExplanation(startFen, rd.ev, rd.mate, rd.m1);
     drawBestMoveArrows(); if (H) showHuman(H); else showLines(rd);
+    playSound('check');
   } catch (e) { if (game.fen() === startFen) showToast(failMsg()); }
   finally { isAnalyzing = false; btn.disabled = false; spinner.remove(); $('btn-analyze-text').textContent = 'أفضل نقلة'; }
 }
@@ -1322,28 +1261,10 @@ function toggleAI() {
 }
 
 function drawArrowLine(id, uci) {
-  const el = $(id);
-  if (!el) return;
-  if (!uci || !/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(uci)) { el.style.display = 'none'; return; }
-  const getPt = square => {
-    let f = FILES.indexOf(square[0]), r = RANKS.indexOf(square[1]);
-    if (f < 0 || r < 0) return null;
-    if (isBoardFlipped) { f = 7 - f; r = 7 - r; }
-    return [f + 0.5, r + 0.5];
-  };
-  const start = getPt(uci.slice(0, 2)), end = getPt(uci.slice(2, 4));
-  if (!start || !end) { el.style.display = 'none'; return; }
-  const dx = end[0] - start[0], dy = end[1] - start[1];
-  const length = Math.hypot(dx, dy);
-  if (!length) { el.style.display = 'none'; return; }
-  // Keep the shaft clear of both pieces; the marker tip stops just short of the target center.
-  const ux = dx / length, uy = dy / length;
-  const fromPad = Math.min(.18, length * .16), toPad = Math.min(.31, length * .24);
-  el.setAttribute('x1', (start[0] + ux * fromPad).toFixed(3));
-  el.setAttribute('y1', (start[1] + uy * fromPad).toFixed(3));
-  el.setAttribute('x2', (end[0] - ux * toPad).toFixed(3));
-  el.setAttribute('y2', (end[1] - uy * toPad).toFixed(3));
-  el.style.display = 'block';
+  const el = $(id); if (!uci) { el.style.display = 'none'; return; }
+  const getPt = s => { let f = FILES.indexOf(s[0]), r = RANKS.indexOf(s[1]); if (isBoardFlipped) { f = 7 - f; r = 7 - r; } return [f + 0.5, r + 0.5]; };
+  const start = getPt(uci.slice(0, 2)); const end = getPt(uci.slice(2, 4));
+  el.setAttribute('x1', start[0]); el.setAttribute('y1', start[1]); el.setAttribute('x2', end[0]); el.setAttribute('y2', end[1]); el.style.display = 'block';
 }
 const _clearAnalysisTwoSided = clearAnalysis;
 clearAnalysis = function () {
@@ -1359,7 +1280,7 @@ function playSuggestedMove() { if (bestMoveData) { const m = bestMoveData.m1; ex
    9. Init
    ========================================= */
 /* ===== v2 additions ===== */
-settings = { ui: 'auto', coords: true, london: true, humanHints: true, animations: true, ...settings };
+settings = { ui: 'auto', coords: true, london: true, humanHints: true, ...settings };
 let puzzle = null;
 
 /* UI theme */
@@ -1882,114 +1803,6 @@ buildSettingsUI(); initEditPalette(); renderBoard(); updateTurnIndicator(); upda
 memReady.then(() => autoEvaluate());
 memReady.then(() => setTimeout(cloudSync, 1500));
 if (settings.aiEnabled) setTimeout(maybeAIPlay, 700);
-
-
-/* ================================================================
-   Chess motion + sound polish layer
-   Lightweight CSS/WebAudio effects; no external assets or libraries.
-   ================================================================ */
-settings.animations = settings.animations !== false;
-function applyMotionPreference() {
-  document.documentElement.classList.toggle('motion-off', !settings.animations);
-  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  document.documentElement.classList.toggle('system-reduced-motion', !!reduced);
-}
-function toggleAnimations() {
-  settings.animations = !settings.animations;
-  saveSettings(); applyMotionPreference(); buildSettingsUI();
-  if (settings.sound) playSound('button');
-  showToast(settings.animations ? 'الحركات والانميشن مفعّلة' : 'تم إيقاف الحركات');
-}
-const _buildSettingsMotionFX = buildSettingsUI;
-buildSettingsUI = function () {
-  _buildSettingsMotionFX();
-  const host = $('settings-extra');
-  if (host && !$('toggle-animations')) {
-    host.insertAdjacentHTML('beforeend', `<button class="list-btn" id="toggle-animations" onclick="toggleAnimations()">الحركات والانميشن: ${settings.animations ? 'مفعّلة' : 'متوقفة'}<span>حركة القطع، التهديد، الأسهم والانتقالات</span></button>`);
-  } else if (host && $('toggle-animations')) {
-    $('toggle-animations').innerHTML = `الحركات والانميشن: ${settings.animations ? 'مفعّلة' : 'متوقفة'}<span>حركة القطع، التهديد، الأسهم والانتقالات</span>`;
-  }
-};
-
-function animateMoveFeedback(move) {
-  if (!settings.animations || !move) return;
-  const from = document.querySelector(`[data-square="${move.from}"]`);
-  const to = document.querySelector(`[data-square="${move.to}"]`);
-  if (from) { from.classList.remove('fx-origin'); void from.offsetWidth; from.classList.add('fx-origin'); }
-  if (to) {
-    to.classList.remove('fx-arrival', 'fx-capture', 'fx-promotion');
-    void to.offsetWidth;
-    to.classList.add(move.captured ? 'fx-capture' : (move.promotion ? 'fx-promotion' : 'fx-arrival'));
-    if (move.captured) {
-      const burst = document.createElement('span'); burst.className = 'capture-burst'; to.appendChild(burst);
-      setTimeout(() => burst.remove(), 620);
-    }
-  }
-  if (move.flags && /[kq]/.test(move.flags)) {
-    const rookTo = move.flags.includes('k') ? (move.color === 'w' ? 'f1' : 'f8') : (move.color === 'w' ? 'd1' : 'd8');
-    const rookSq = document.querySelector(`[data-square="${rookTo}"]`);
-    if (rookSq) { rookSq.classList.remove('fx-arrival'); void rookSq.offsetWidth; rookSq.classList.add('fx-arrival'); }
-  }
-}
-const _executeMoveMotionFX = executeMove;
-executeMove = function (from, to, promo) {
-  let preview = null;
-  try { preview = game.moves({ verbose: true }).find(m => m.from === from && m.to === to && (!promo || m.promotion === promo)); } catch (e) {}
-  _executeMoveMotionFX(from, to, promo);
-  if (preview) {
-    animateMoveFeedback(preview);
-  }
-};
-
-/* Board arrows enter smoothly and subtly breathe without distracting from play. */
-const _drawArrowMotionFX = drawArrowLine;
-drawArrowLine = function (id, uci) {
-  _drawArrowMotionFX(id, uci);
-  const el = $(id);
-  if (el && uci && settings.animations) {
-    el.classList.remove('arrow-enter'); void el.getBoundingClientRect(); el.classList.add('arrow-enter');
-  }
-};
-
-/* Selection and AI-thinking cues. */
-const _handleSquareTapMotionFX = handleSquareTap;
-handleSquareTap = function (square) {
-  const before = selectedSquare;
-  _handleSquareTapMotionFX(square);
-  if (settings.sound && selectedSquare && selectedSquare !== before) playSound('select');
-};
-const _maybeAIPlayMotionFX = maybeAIPlay;
-maybeAIPlay = async function () {
-  if (settings.animations && settings.aiEnabled && !game.game_over() && game.turn() !== playerColor) {
-    $('turn-indicator').classList.add('ai-thinking-fx');
-    if (settings.sound) playSound('ai');
-  }
-  try { return await _maybeAIPlayMotionFX(); }
-  finally { $('turn-indicator').classList.remove('ai-thinking-fx'); }
-};
-
-/* Game-end flourish only fires on the transition into a terminal state. */
-let _lastTerminalFenFX = '';
-const _updateTurnIndicatorMotionFX = updateTurnIndicator;
-updateTurnIndicator = function () {
-  _updateTurnIndicatorMotionFX();
-  const terminal = game.game_over();
-  const fen = terminal ? game.fen() : '';
-  if (terminal && fen !== _lastTerminalFenFX) {
-    // executeMove -> playMoveSound owns the one-shot terminal audio/haptic.
-    _lastTerminalFenFX = fen;
-  } else if (!terminal) _lastTerminalFenFX = '';
-  $('turn-indicator').classList.toggle('turn-change-fx', settings.animations && !terminal);
-};
-
-/* Avoid animation when the OS asks for reduced motion, and re-apply after load. */
-applyMotionPreference();
-buildSettingsUI();
-if (window.matchMedia) {
-  const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-  if (motionQuery.addEventListener) motionQuery.addEventListener('change', applyMotionPreference);
-}
-
 </script>
 </body>
 </html>
