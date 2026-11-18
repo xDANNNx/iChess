@@ -89,10 +89,8 @@ button:focus-visible, .sq:focus-visible { outline: 2px solid var(--brass); outli
 .coord-rank { top: 1px; left: 3px; }
 .sq .coord-file, .sq .coord-rank { color: var(--dark); }
 .sq.dark .coord-file, .sq.dark .coord-rank { color: var(--light); }
-.move-dot { position: absolute; width: 30%; height: 30%; border-radius: 50%; background: rgba(20,30,10,.28); pointer-events: none; z-index: 5; animation:targetAppear .14s cubic-bezier(.2,.8,.25,1) both; }
-.capture-ring { position: absolute; inset: 4%; border-radius: 50%; border: max(3px, .8cqw) solid rgba(20,30,10,.28); pointer-events: none; z-index: 5; animation:captureTargetAppear .16s ease-out both; }
-@keyframes targetAppear { from{opacity:0;transform:scale(.45)} to{opacity:1;transform:scale(1)} }
-@keyframes captureTargetAppear { from{opacity:0;transform:scale(.86)} to{opacity:1;transform:scale(1)} }
+.move-dot { position: absolute; width: 30%; height: 30%; border-radius: 50%; background: rgba(20,30,10,.28); pointer-events: none; z-index: 5; }
+.capture-ring { position: absolute; inset: 4%; border-radius: 50%; border: max(3px, .8cqw) solid rgba(20,30,10,.28); pointer-events: none; z-index: 5; }
 @keyframes flash-error { 50% { background-color: rgba(239,83,80,.7); } }
 .sq.error { animation: flash-error .25s 2; }
 .arrows { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
@@ -155,7 +153,7 @@ button:focus-visible, .sq:focus-visible { outline: 2px solid var(--brass); outli
 .io-btn { flex: 1; padding: 8px; background: var(--raise); border: 1px solid var(--line); border-radius: 6px; font-size: 13px; font-weight: 600; }
 .io-btn:active { background: var(--line); }
 .board { touch-action: none; }
-.ghost-piece { position: fixed; left:0; top:0; pointer-events: none; z-index: 40; background: center/contain no-repeat; filter: drop-shadow(0 8px 10px rgba(0,0,0,.5)); transform:translate3d(0,0,0) translate(-50%,-50%) scale(1.08); will-change:transform; }
+.ghost-piece { position: fixed; pointer-events: none; z-index: 40; background: center/contain no-repeat; filter: drop-shadow(0 8px 10px rgba(0,0,0,.5)); transform: translate(-50%, -50%) scale(1.1); }
 .sq.hover-highlight { box-shadow: inset 0 0 0 3px rgba(255,255,255,.75); }
 @media (min-width: 700px) and (min-aspect-ratio: 1/1) {
   .app-container { flex-direction: row; direction: ltr; }
@@ -199,84 +197,9 @@ body.nocoords .coord-file,body.nocoords .coord-rank{display:none}
 .analysis-legend{display:inline-flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:4px;color:var(--muted);font-size:9.5px}
 .analysis-legend span{white-space:nowrap}
 .analysis-legend i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-inline-end:3px}
-.analysis-legend .gold{background:#FFD700}.analysis-legend .blue{background:#5b9bf0}.analysis-legend .green{background:#58b878}.analysis-legend .purple{background:#a855f7}.analysis-legend .red{background:#ef4444}
+.analysis-legend .gold{background:#FFD700}.analysis-legend .blue{background:#5b9bf0}.analysis-legend .green{background:#58b878}
 .coach-box .ln.book-line{border-color:rgba(224,176,74,.55)}
 .coach-box .side-label{color:var(--muted);font-size:10px;font-weight:700}
-
-
-/* Smooth chess-specific motion system */
-:root { --fx-ease: cubic-bezier(.2,.75,.25,1); }
-.sq { transition: background-color .18s var(--fx-ease), box-shadow .22s var(--fx-ease), filter .18s var(--fx-ease); }
-.sq.selected { box-shadow: inset 0 0 0 3px rgba(255,215,0,.88), inset 0 0 22px rgba(255,215,0,.18); animation: squareSelect .72s ease-in-out infinite alternate; z-index: 4; }
-@keyframes squareSelect { from { box-shadow: inset 0 0 0 2px rgba(255,215,0,.55), inset 0 0 8px rgba(255,215,0,.10); } to { box-shadow: inset 0 0 0 3px rgba(255,215,0,.95), inset 0 0 18px rgba(255,215,0,.28); } }
-.sq.last-move { transition: box-shadow .24s ease, background-color .24s ease; }
-.sq.fx-origin { animation: originFade .42s ease-out; }
-.sq.fx-arrival { animation: arrivalGlow .58s var(--fx-ease); }
-.sq.fx-capture { animation: captureImpact .48s var(--fx-ease); z-index: 6; }
-.sq.fx-promotion { animation: promotionGlow .85s var(--fx-ease); z-index: 6; }
-@keyframes originFade { 0% { box-shadow: inset 0 0 0 4px rgba(255,215,0,.95); } 100% { box-shadow: inset 0 0 0 0 rgba(255,215,0,0); } }
-@keyframes arrivalGlow { 0% { box-shadow: inset 0 0 0 0 rgba(255,255,255,0); } 35% { box-shadow: inset 0 0 0 5px rgba(255,255,255,.72), inset 0 0 24px rgba(255,215,0,.42); } 100% { box-shadow: inset 0 0 0 1px rgba(255,255,255,0); } }
-@keyframes captureImpact { 0% { transform: scale(1); filter:brightness(1); } 28% { transform: scale(.91); filter:brightness(1.55); } 62% { transform: scale(1.035); } 100% { transform: scale(1); filter:brightness(1); } }
-@keyframes promotionGlow { 0% { box-shadow: inset 0 0 0 0 rgba(224,176,74,0); } 45% { box-shadow: inset 0 0 0 5px rgba(255,215,0,.95), inset 0 0 28px rgba(255,215,0,.45); } 100% { box-shadow: inset 0 0 0 0 rgba(255,215,0,0); } }
-.capture-burst { position:absolute; inset:12%; z-index:8; border:3px solid rgba(255,255,255,.88); border-radius:50%; pointer-events:none; animation:captureBurst .58s ease-out forwards; }
-@keyframes captureBurst { from { opacity:.9; transform:scale(.25); } to { opacity:0; transform:scale(1.65); } }
-.sq.sq-in-check { animation: checkPulse .72s ease-in-out infinite alternate, checkShake .32s ease-in-out 1; }
-@keyframes checkShake { 0%,100% { transform:translateX(0); } 25% { transform:translateX(-1px); } 75% { transform:translateX(1px); } }
-.sq.sq-in-check .piece { filter:drop-shadow(0 0 5px #ff3939) drop-shadow(0 0 11px rgba(255,40,40,.55)); animation: kingThreat .72s ease-in-out infinite alternate; }
-@keyframes kingThreat { from { transform:scale(1); } to { transform:scale(1.045); } }
-.arrows line { transition:opacity .18s ease, stroke-width .18s ease; filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.62)); }
-.arrows line.arrow-enter { stroke-dasharray:none !important; stroke-dashoffset:0 !important; animation: arrowBreath 2.4s ease-in-out .15s 2 alternate; }
-.arrows line.arrow-best { filter:drop-shadow(0 1px 2px rgba(0,0,0,.72)) drop-shadow(0 0 2px rgba(255,215,0,.32)); }
-.arrows line.arrow-good { filter:drop-shadow(0 1px 2px rgba(0,0,0,.72)); }
-.arrows line.arrow-normal { filter:drop-shadow(0 1px 2px rgba(0,0,0,.72)); }
-.arrows .tactical-threat{stroke:#ef4444;stroke-width:.105;stroke-linecap:round;stroke-linejoin:round;opacity:.94;filter:drop-shadow(0 1px 2px rgba(0,0,0,.78)) drop-shadow(0 0 2px rgba(239,68,68,.45));}
-.arrows .tactical-pin{stroke:#a855f7;stroke-width:.135;stroke-linecap:round;stroke-linejoin:round;opacity:.98;filter:drop-shadow(0 1px 2px rgba(0,0,0,.8)) drop-shadow(0 0 3px rgba(168,85,247,.55));}
-.arrows .pin-badge{fill:#7e22ce;stroke:#f3e8ff;stroke-width:.035;filter:drop-shadow(0 1px 2px rgba(0,0,0,.72));}
-.arrows .pin-glyph{stroke:#fff;stroke-width:.055;stroke-linecap:round;stroke-linejoin:round;fill:none;}
-.arrows .tactical-threat,.arrows .tactical-pin{vector-effect:non-scaling-stroke;}
-
-@keyframes arrowDraw { to { stroke-dashoffset:0; } }
-@keyframes arrowBreath { from { opacity:.68; } to { opacity:1; } }
-.checkmate-overlay.show { animation:fadeIn .42s ease-out; }
-.checkmate-icon { animation:popIn .65s cubic-bezier(.17,.89,.32,1.28), crownGlow 1.8s ease-in-out .65s infinite alternate; }
-@keyframes crownGlow { from { filter:drop-shadow(0 0 4px rgba(255,215,0,.25)); } to { filter:drop-shadow(0 0 19px rgba(255,215,0,.85)); } }
-#turn-indicator { transition:color .22s ease, background-color .22s ease; }
-#turn-indicator.turn-change-fx { animation:turnArrive .34s ease-out; }
-@keyframes turnArrive { from { transform:translateY(3px); opacity:.65; } to { transform:translateY(0); opacity:1; } }
-#turn-indicator.ai-thinking-fx { color:var(--brass); animation:aiThinkingPulse .9s ease-in-out infinite alternate; }
-@keyframes aiThinkingPulse { from { opacity:.72; } to { opacity:1; text-shadow:0 0 12px rgba(224,176,74,.4); } }
-.btn-analyze, .icon-btn, .tool-btn, .list-btn, .close-btn { transition:transform .16s var(--fx-ease), filter .16s ease, background-color .16s ease; }
-button:active { transform:scale(.975); }
-.motion-off *, .system-reduced-motion * { animation:none !important; transition:none !important; scroll-behavior:auto !important; }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; } }
-
-
-/* Performance-tuned interactive piece motion: transform/opacity only. */
-.piece { transition: transform .14s cubic-bezier(.18,.78,.22,1) !important; transform-origin: 50% 58%; backface-visibility:hidden; }
-.sq.selected .piece { transform:translateY(-3px) scale(1.055); filter:drop-shadow(0 5px 5px rgba(0,0,0,.28)); }
-@media (hover:hover) and (pointer:fine) { .sq:has(.piece):hover .piece { transform:translateY(-2px) scale(1.035); filter:drop-shadow(0 4px 4px rgba(0,0,0,.25)); } }
-.piece.piece-landing { animation:pieceLanding .22s cubic-bezier(.2,.8,.25,1) both; }
-.piece.piece-promotion { animation:piecePromotion .38s cubic-bezier(.18,.78,.22,1) both; }
-@keyframes pieceLanding { 0%{transform:translateY(-7px) scale(1.10)} 62%{transform:translateY(1px) scale(.965)} 100%{transform:translateY(0) scale(1)} }
-@keyframes piecePromotion { 0%{transform:scale(.78) rotate(-8deg);filter:brightness(1.5)} 65%{transform:scale(1.12) rotate(3deg);filter:brightness(1.2)} 100%{transform:scale(1) rotate(0);filter:none} }
-.sq { transition: background-color .10s linear, box-shadow .12s ease-out, filter .10s linear !important; }
-.sq.selected { animation: squareSelect .48s ease-in-out infinite alternate; }
-.sq.fx-origin { animation: originFade .22s ease-out; }
-.sq.fx-origin .piece { animation:pieceDeparture .16s ease-in both; }
-@keyframes pieceDeparture { to{opacity:.55;transform:scale(.88)} }
-.sq.fx-arrival { animation: arrivalGlow .30s cubic-bezier(.18,.78,.22,1); }
-.sq.fx-capture { animation: captureImpact .28s cubic-bezier(.18,.78,.22,1); }
-.sq.fx-promotion { animation: promotionGlow .42s ease-out; }
-.capture-burst { animation-duration:.32s; }
-.sq.sq-in-check { animation: checkPulse .62s ease-in-out infinite alternate; }
-.sq.sq-in-check .piece { animation: kingThreat .62s ease-in-out infinite alternate; }
-.arrows line { transition: opacity .10s ease-out, stroke-width .10s ease-out; }
-.arrows line.arrow-enter { animation: arrowBreath .32s ease-out 1; }
-.checkmate-overlay.show { animation-duration:.24s; }
-.checkmate-icon { animation-duration:.34s, 1.2s; }
-#turn-indicator { transition: color .12s ease-out, background-color .12s ease-out; }
-#turn-indicator.turn-change-fx { animation-duration:.18s; }
-#turn-indicator.ai-thinking-fx { animation-duration:.7s; }
 
 </style>
 </head>
@@ -324,16 +247,13 @@ button:active { transform:scale(.975); }
         <div class="board" id="board"></div>
         <svg class="arrows" viewBox="0 0 8 8">
           <defs>
-            <marker id="arrow-gold" markerUnits="userSpaceOnUse" markerWidth=".46" markerHeight=".46" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#FFD700"/></marker>
-            <marker id="arrow-blue" markerUnits="userSpaceOnUse" markerWidth=".43" markerHeight=".43" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#5b9bf0"/></marker>
-            <marker id="arrow-green" markerUnits="userSpaceOnUse" markerWidth=".40" markerHeight=".40" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#58b878"/></marker>
-            <marker id="arrow-threat-red" markerUnits="userSpaceOnUse" markerWidth=".44" markerHeight=".44" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#ef4444"/></marker>
-            <marker id="arrow-pin-purple" markerUnits="userSpaceOnUse" markerWidth=".44" markerHeight=".44" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#a855f7"/></marker>
+            <marker id="arrow-gold" markerWidth="3" markerHeight="3" refX="1.2" refY="1.5" orient="auto"><path d="M0 0 3 1.5 0 3z" fill="#FFD700"/></marker>
+            <marker id="arrow-blue" markerWidth="3" markerHeight="3" refX="1.2" refY="1.5" orient="auto"><path d="M0 0 3 1.5 0 3z" fill="#5b9bf0"/></marker>
+            <marker id="arrow-green" markerWidth="3" markerHeight="3" refX="1.2" refY="1.5" orient="auto"><path d="M0 0 3 1.5 0 3z" fill="#58b878"/></marker>
           </defs>
-          <line id="arrow-alt" class="analysis-arrow arrow-good" stroke="#5b9bf0" stroke-width=".125" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-blue)" opacity=".92" style="display:none"/>
-          <line id="arrow-best" class="analysis-arrow arrow-best" stroke="#FFD700" stroke-width=".15" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-gold)" opacity=".98" style="display:none"/>
-          <line id="arrow-third" class="analysis-arrow arrow-normal" stroke="#58b878" stroke-width=".115" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-green)" opacity=".90" style="display:none"/>
-          <g id="tactical-arrows" aria-hidden="true"></g>
+          <line id="arrow-alt" stroke="#5b9bf0" stroke-width=".16" stroke-linecap="round" marker-end="url(#arrow-blue)" opacity=".85" style="display:none"/>
+          <line id="arrow-best" stroke="#FFD700" stroke-width=".2" stroke-linecap="round" marker-end="url(#arrow-gold)" opacity=".95" style="display:none"/>
+          <line id="arrow-third" stroke="#58b878" stroke-width=".16" stroke-linecap="round" marker-end="url(#arrow-green)" opacity=".85" style="display:none"/>
         </svg>
         <div class="checkmate-overlay" id="checkmate-overlay">
           <i class="fa-solid fa-crown checkmate-icon"></i>
@@ -551,109 +471,63 @@ function triggerHaptic(type) {
 
 let audioCtx = null;
 let masterGain = null;
-let audioLowpass = null;
 function initAudio() {
   try {
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       masterGain = audioCtx.createGain();
-      audioLowpass = audioCtx.createBiquadFilter();
-      audioLowpass.type = 'lowpass';
-      audioLowpass.frequency.value = 2600;
-      audioLowpass.Q.value = 0.55;
       const comp = audioCtx.createDynamicsCompressor();
-      comp.threshold.value = -24;
-      comp.knee.value = 18;
-      comp.ratio.value = 2.2;
-      comp.attack.value = 0.012;
-      comp.release.value = 0.22;
-      masterGain.connect(audioLowpass);
-      audioLowpass.connect(comp);
-      comp.connect(audioCtx.destination);
+      masterGain.connect(comp); comp.connect(audioCtx.destination);
     }
-    if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
-    // Softer overall output; preserve the user's volume preference without harsh peaks.
-    const targetVolume = Math.max(0, Math.min(0.34, (Number(settings.vol) || 0) * 0.34));
-    masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
-    masterGain.gain.setTargetAtTime(targetVolume, audioCtx.currentTime, 0.055);
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    masterGain.gain.value = settings.vol;
     return audioCtx;
   } catch (e) { return null; }
 }
+function playNoise(ctx, time, duration, freq, q, vol) {
+  const bufferSize = Math.floor(ctx.sampleRate * duration);
+  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 3);
+  const src = ctx.createBufferSource(); src.buffer = buffer;
+  const filter = ctx.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = freq; filter.Q.value = q;
+  const gain = ctx.createGain(); gain.gain.value = vol;
+  src.connect(filter); filter.connect(gain); gain.connect(masterGain); src.start(time);
+}
 function playTone(ctx, time, duration, freqStart, freqEnd, vol, type = 'sine') {
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  const filter = ctx.createBiquadFilter();
-  osc.type = type === 'triangle' ? 'sine' : type;
-  osc.frequency.setValueAtTime(Math.max(80, freqStart), time);
-  if (freqEnd && freqEnd !== freqStart) {
-    osc.frequency.exponentialRampToValueAtTime(Math.max(80, freqEnd), time + duration);
-  }
-  filter.type = 'lowpass';
-  filter.frequency.setValueAtTime(1900, time);
-  filter.Q.value = 0.45;
-  const peak = Math.max(0.0001, Math.min(0.075, vol));
-  const attack = Math.min(0.035, duration * 0.28);
-  gain.gain.setValueAtTime(0.0001, time);
-  gain.gain.exponentialRampToValueAtTime(peak, time + Math.max(0.012, attack));
-  gain.gain.setTargetAtTime(0.0001, time + Math.max(attack, duration * 0.48), Math.max(0.045, duration * 0.24));
-  osc.connect(filter);
-  filter.connect(gain);
-  gain.connect(masterGain);
-  osc.start(time);
-  osc.stop(time + duration + 0.18);
+  const osc = ctx.createOscillator(); const gain = ctx.createGain();
+  osc.type = type; osc.frequency.setValueAtTime(freqStart, time);
+  if (freqEnd && freqEnd !== freqStart) osc.frequency.exponentialRampToValueAtTime(freqEnd, time + duration);
+  gain.gain.setValueAtTime(vol, time); gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+  osc.connect(gain); gain.connect(masterGain); osc.start(time); osc.stop(time + duration + 0.02);
 }
 const PIECE_WEIGHT = { p: 1.1, n: 1, b: .97, r: .92, q: .88, k: .8 };
 
 function playSound(type, moveObj) {
-  const hapticType = ({ move:'move', capture:'capture', check:'check', captureCheck:'check', castle:'castle', promote:'promote', illegal:'illegal', end:'end', draw:'medium', start:'light', undo:'light', select:'light', button:'light', threat:'check', ai:'light' })[type] || 'light';
-  triggerHaptic(hapticType);
+  triggerHaptic(type);
   if (!settings.sound || settings.vol <= 0) return;
-  const ctx = initAudio();
-  if (!ctx || !masterGain) return;
-  if (ctx.state === 'suspended') ctx.resume().catch(() => {});
-  const t = ctx.currentTime + 0.008;
-  const piece = moveObj && moveObj.piece ? moveObj.piece : 'p';
-  const pitch = ({p:1,n:1.08,b:1.04,r:.94,q:.88,k:.97})[piece] || 1;
-  const userVol = Math.max(.15, Math.min(1, Number(settings.vol) || .7));
-  const tone = (at, dur, f1, f2, level=.035) => playTone(ctx, t + at, dur, f1 * pitch, f2 * pitch, level * userVol, 'sine');
+  const ctx = initAudio(); if (!ctx) return;
+  const t = ctx.currentTime + 0.005;
+  const weight = ((moveObj && PIECE_WEIGHT[moveObj.piece]) || 1) * (0.97 + Math.random() * 0.06);
+  const playTap = (offset, vol) => { playNoise(ctx, t + offset, 0.07, 1700 * weight, 1.4, 0.9 * vol); playTone(ctx, t + offset, 0.09, 230 * weight, 95 * weight, 0.8 * vol); };
   switch (type) {
-    // Quiet wooden-like taps are represented by short, rounded sine notes—no broadband clicks.
-    case 'move': tone(0,.105,330,285,.032); tone(.018,.13,495,440,.014); break;
-    case 'capture': tone(0,.16,220,175,.044); tone(.035,.17,392,330,.022); break;
-    case 'check': tone(0,.22,523,494,.035); tone(.13,.27,659,622,.032); break;
-    case 'captureCheck': tone(0,.17,220,185,.036); tone(.12,.22,523,494,.028); tone(.25,.24,659,622,.024); break;
-    case 'castle': tone(0,.13,294,330,.026); tone(.11,.15,392,440,.024); break;
-    case 'promote': [392,494,587,659].forEach((f,i)=>tone(i*.095,.25,f,f*1.005,.026)); break;
-    case 'end': [392,494,587,784].forEach((f,i)=>tone(i*.14,.42,f,f*.998,.025)); break;
-    case 'draw': [494,440,392].forEach((f,i)=>tone(i*.16,.28,f,f*.998,.022)); break;
-    case 'illegal': tone(0,.12,220,196,.025); break;
-    case 'start': [330,392,494].forEach((f,i)=>tone(i*.09,.2,f,f*1.002,.021)); break;
-    case 'undo': tone(0,.16,440,330,.022); break;
-    case 'select': tone(0,.075,587,554,.012); break;
-    case 'button': tone(0,.085,440,415,.012); break;
-    case 'threat': tone(0,.18,440,415,.022); tone(.12,.2,554,523,.02); break;
-    case 'ai': tone(0,.09,392,415,.01); break;
+    case 'move': playTap(0, 1); break;
+    case 'capture': playNoise(ctx, t, 0.12, 1100 * weight, 0.9, 1.2); playTone(ctx, t, 0.14, 170 * weight, 60 * weight, 1); playTap(0.045, 0.9); break;
+    case 'check': playTap(0, 1); playTone(ctx, t + 0.04, 0.22, 988, 988, 0.25, 'triangle'); playTone(ctx, t + 0.04, 0.22, 1318, 1318, 0.12, 'triangle'); break;
+    case 'castle': playTap(0, 1); playTap(0.1, 0.9); break;
+    case 'promote': playTap(0, 0.8); [523, 659, 784, 1047].forEach((f, i) => playTone(ctx, t + 0.08 + i * 0.07, 0.25, f, f, 0.22, 'triangle')); break;
+    case 'end': playTap(0, 1); [392, 330, 262].forEach((f, i) => { playTone(ctx, t + 0.15 + i * 0.2, 0.9, f, f * 0.99, 0.3); playTone(ctx, t + 0.15 + i * 0.2, 0.6, f * 2, f * 2, 0.1); }); break;
+    case 'illegal': playTone(ctx, t, 0.09, 130, 110, 0.25, 'square'); playTone(ctx, t + 0.11, 0.09, 130, 110, 0.25, 'square'); break;
   }
 }
 
 function playMoveSound(move) {
   if (game.in_checkmate()) return playSound('end', move);
   if (game.in_stalemate() || game.in_draw()) return playSound('draw', move);
-  const isCheck = game.in_check();
-  if (move.promotion) return playSound('promote', move);
-  if (move.captured && isCheck) return playSound('captureCheck', move);
-  if (isCheck) return playSound('check', move);
-  if (move.captured) return playSound('capture', move);
-  if (move.flags && /[kq]/.test(move.flags)) return playSound('castle', move);
-  return playSound('move', move);
+  playSound(move.promotion ? 'promote' : game.in_check() ? 'check' : move.captured ? 'capture' : /[kq]/.test(move.flags) ? 'castle' : 'move', move);
 }
-function unlockChessAudio() {
-  if (!settings.sound) return;
-  const ctx = initAudio();
-  if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
-}
-if (window.PointerEvent) document.addEventListener('pointerdown', unlockChessAudio, { once: true, passive: true });
-else document.addEventListener('touchstart', unlockChessAudio, { once: true, passive: true });
+
+document.addEventListener('pointerdown', () => initAudio(), { once: true });
 let toastTimeout;
 function showToast(msg) {
   triggerHaptic('light');
@@ -856,9 +730,9 @@ function executeMove(from, to, promo) {
       const dy = startRect.top - endRect.top;
       endEl.style.transition = 'none'; endEl.style.transform = `translate(${dx}px, ${dy}px)`;
       void endEl.offsetWidth;
-      endEl.style.transition = 'transform 0.14s cubic-bezier(0.18, 0.78, 0.22, 1)';
+      endEl.style.transition = 'transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)';
       endEl.style.transform = 'translate(0, 0)';
-      setTimeout(() => { if (endEl) endEl.style.transition = ''; }, 150);
+      setTimeout(() => { if (endEl) endEl.style.transition = ''; }, 200);
     }
   }
   // ← تشغيل الذكاء الاصطناعي بعد نقلة اللاعب
@@ -898,10 +772,10 @@ function askPromotion(color) {
       const pieceEl = sqEl ? sqEl.querySelector('.piece') : null;
       const width = sqEl ? sqEl.getBoundingClientRect().width : 48;
       ghostEl = document.createElement('div'); ghostEl.className = 'ghost-piece';
-      ghostEl.style.width = width + 'px'; ghostEl.style.height = width + 'px'; ghostEl.style.backgroundImage = dragState.pieceImg; ghostEl.style.left = '0'; ghostEl.style.top = '0'; ghostEl.style.transform = `translate3d(${dragState.startX}px, ${dragState.startY}px, 0) translate(-50%, -50%) scale(1.08)`;
+      ghostEl.style.width = width + 'px'; ghostEl.style.height = width + 'px'; ghostEl.style.backgroundImage = dragState.pieceImg;
       document.body.appendChild(ghostEl); if (pieceEl) pieceEl.style.opacity = '0';
     }
-    ghostEl.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0) translate(-50%, -50%) scale(1.08)`;
+    ghostEl.style.left = e.clientX + 'px'; ghostEl.style.top = e.clientY + 'px';
     clearHighlights(); const targetSq = getSquareAt(e.clientX, e.clientY);
     if (targetSq) { const targetEl = document.querySelector(`[data-square="${targetSq}"]`); if (targetEl) targetEl.classList.add('hover-highlight'); }
     e.preventDefault();
@@ -1040,7 +914,7 @@ function buildSettingsUI() {
   document.documentElement.style.setProperty('--light', theme[1]);
   document.documentElement.style.setProperty('--dark', theme[2]);
 }
-function toggleSound() { triggerHaptic('light'); settings.sound = !settings.sound; saveSettings(); buildSettingsUI(); if (settings.sound) playSound('button'); }
+function toggleSound() { triggerHaptic('light'); settings.sound = !settings.sound; saveSettings(); buildSettingsUI(); playSound('move'); }
 function toggleHaptic() { settings.haptic = !settings.haptic; saveSettings(); buildSettingsUI(); if (settings.haptic) triggerHaptic('light'); }
 
 /* =========================================
@@ -1270,6 +1144,7 @@ async function analyzePosition() {
     updateEvalBar(rd.ev, rd.mate);
     generateCoachExplanation(startFen, rd.ev, rd.mate, rd.m1);
     drawBestMoveArrows(); if (H) showHuman(H); else showLines(rd);
+    playSound('check');
   } catch (e) { if (game.fen() === startFen) showToast(failMsg()); }
   finally { isAnalyzing = false; btn.disabled = false; spinner.remove(); $('btn-analyze-text').textContent = 'أفضل نقلة'; }
 }
@@ -1386,40 +1261,16 @@ function toggleAI() {
 }
 
 function drawArrowLine(id, uci) {
-  const el = $(id);
-  if (!el) return;
-  if (!uci || !/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(uci)) { el.style.display = 'none'; return; }
-  const getPt = square => {
-    let f = FILES.indexOf(square[0]), r = RANKS.indexOf(square[1]);
-    if (f < 0 || r < 0) return null;
-    if (isBoardFlipped) { f = 7 - f; r = 7 - r; }
-    return [f + 0.5, r + 0.5];
-  };
-  const start = getPt(uci.slice(0, 2)), end = getPt(uci.slice(2, 4));
-  if (!start || !end) { el.style.display = 'none'; return; }
-  const dx = end[0] - start[0], dy = end[1] - start[1];
-  const length = Math.hypot(dx, dy);
-  if (!length) { el.style.display = 'none'; return; }
-  // Keep the shaft clear of both pieces; the marker tip stops just short of the target center.
-  const ux = dx / length, uy = dy / length;
-  const fromPad = Math.min(.18, length * .16), toPad = Math.min(.31, length * .24);
-  el.setAttribute('x1', (start[0] + ux * fromPad).toFixed(3));
-  el.setAttribute('y1', (start[1] + uy * fromPad).toFixed(3));
-  el.setAttribute('x2', (end[0] - ux * toPad).toFixed(3));
-  el.setAttribute('y2', (end[1] - uy * toPad).toFixed(3));
-  // Keep a continuous shaft: dash animations can leave only the SVG marker visible on mobile Safari.
-  el.style.strokeDasharray = 'none';
-  el.style.strokeDashoffset = '0';
-  el.style.strokeLinecap = 'round';
-  el.style.display = 'block';
+  const el = $(id); if (!uci) { el.style.display = 'none'; return; }
+  const getPt = s => { let f = FILES.indexOf(s[0]), r = RANKS.indexOf(s[1]); if (isBoardFlipped) { f = 7 - f; r = 7 - r; } return [f + 0.5, r + 0.5]; };
+  const start = getPt(uci.slice(0, 2)); const end = getPt(uci.slice(2, 4));
+  el.setAttribute('x1', start[0]); el.setAttribute('y1', start[1]); el.setAttribute('x2', end[0]); el.setAttribute('y2', end[1]); el.style.display = 'block';
 }
 const _clearAnalysisTwoSided = clearAnalysis;
 clearAnalysis = function () {
   _clearAnalysisTwoSided();
   const third = $('arrow-third');
   if (third) third.style.display = 'none';
-  const tactical = $('tactical-arrows');
-  if (tactical) tactical.replaceChildren();
 };
 
 function drawBestMoveArrows() { if (!bestMoveData) return; drawArrowLine('arrow-best', bestMoveData.m1); drawArrowLine('arrow-alt', bestMoveData.m2 && bestMoveData.m2 !== bestMoveData.m1 ? bestMoveData.m2 : null); }
@@ -1429,7 +1280,7 @@ function playSuggestedMove() { if (bestMoveData) { const m = bestMoveData.m1; ex
    9. Init
    ========================================= */
 /* ===== v2 additions ===== */
-settings = { ui: 'auto', coords: true, london: true, humanHints: true, animations: true, ...settings };
+settings = { ui: 'auto', coords: true, london: true, humanHints: true, ...settings };
 let puzzle = null;
 
 /* UI theme */
@@ -1798,131 +1649,27 @@ function engineArrowCandidates(fen, result) {
   }));
 }
 
-/* Tactical overlays: pins (purple + pin badge) and direct threats (red). */
-function drawTacticalArrows() {
-  const group = $('tactical-arrows');
-  if (!group || !game || typeof game.board !== 'function') return;
-  group.replaceChildren();
-  const NS = 'http://www.w3.org/2000/svg';
-  const board = game.board(); // rank 8 at row 0, file a at column 0
-  const files = 'abcdefgh';
-  const pieceAt = (f, r) => (f < 0 || f > 7 || r < 1 || r > 8) ? null : board[8-r][f];
-  const squarePoint = (f, r) => {
-    let x=f, y=8-r;
-    if (isBoardFlipped) { x=7-f; y=r-1; }
-    return [x+.5,y+.5];
-  };
-  const pointFor = sq => squarePoint(files.indexOf(sq[0]), Number(sq[1]));
-  const addLine = (from, to, kind) => {
-    const a=pointFor(from), b=pointFor(to), dx=b[0]-a[0], dy=b[1]-a[1], len=Math.hypot(dx,dy);
-    if (!len) return;
-    const ux=dx/len, uy=dy/len, padA=Math.min(.19,len*.14), padB=Math.min(.28,len*.22);
-    const line=document.createElementNS(NS,'line');
-    line.setAttribute('x1',(a[0]+ux*padA).toFixed(3)); line.setAttribute('y1',(a[1]+uy*padA).toFixed(3));
-    line.setAttribute('x2',(b[0]-ux*padB).toFixed(3)); line.setAttribute('y2',(b[1]-uy*padB).toFixed(3));
-    line.setAttribute('class',kind==='pin'?'tactical-pin':'tactical-threat');
-    line.setAttribute('marker-end',kind==='pin'?'url(#arrow-pin-purple)':'url(#arrow-threat-red)');
-    group.appendChild(line);
-  };
-  const addPinBadge = square => {
-    const [x,y]=pointFor(square), g=document.createElementNS(NS,'g');
-    g.setAttribute('transform',`translate(${x} ${y})`);
-    const c=document.createElementNS(NS,'circle'); c.setAttribute('r','.19'); c.setAttribute('class','pin-badge'); g.appendChild(c);
-    // A compact push-pin glyph, matching the purple reference marker.
-    const head=document.createElementNS(NS,'path'); head.setAttribute('d','M-.065 -.085 Q-.065 -.145 0 -.145 Q.065 -.145 .065 -.085 L.045 -.015 L.095 .025 L.095 .055 L-.095 .055 L-.095 .025 L-.045 -.015 Z M0 .055 L0 .135'); head.setAttribute('class','pin-glyph'); g.appendChild(head);
-    group.appendChild(g);
-  };
-  const dirs=[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
-  const isSlider=(piece,df,dr)=>{
-    const t=piece.type;
-    if(t==='q') return true;
-    if(t==='r') return df===0||dr===0;
-    if(t==='b') return Math.abs(df)===1&&Math.abs(dr)===1;
-    return false;
-  };
-  // Absolute pins: king -> pinned friendly piece -> opposing rook/bishop/queen.
-  const pins=[];
-  for(const color of ['w','b']) {
-    let king=null;
-    for(let r=1;r<=8&&!king;r++) for(let f=0;f<8;f++){const p=pieceAt(f,r);if(p&&p.color===color&&p.type==='k'){king=files[f]+r;break;}}
-    if(!king) continue;
-    const kf=files.indexOf(king[0]), kr=Number(king[1]);
-    for(const [df,dr] of dirs){
-      let f=kf+df,r=kr+dr, candidate=null;
-      while(f>=0&&f<8&&r>=1&&r<=8){
-        const p=pieceAt(f,r);
-        if(p){
-          if(!candidate){ if(p.color!==color) break; candidate=files[f]+r; }
-          else {
-            if(p.color!==color&&isSlider(p,df,dr)) pins.push({attacker:files[f]+r,pinned:candidate,king});
-            break;
-          }
-        }
-        f+=df;r+=dr;
-      }
-    }
-  }
-  // Draw the pin ray from the pinner through the pinned man towards its king.
-  pins.forEach(pin=>{addLine(pin.attacker,pin.king,'pin');addPinBadge(pin.pinned);});
-
-  const value={p:1,n:3,b:3,r:5,q:9,k:20};
-  const attackers=[];
-  const attacksSquare=(fromF,fromR,toF,toR,p)=>{
-    const df=toF-fromF, dr=toR-fromR, adf=Math.abs(df), adr=Math.abs(dr), t=p.type;
-    if(t==='p') return p.color==='w' ? dr===1&&adf===1 : dr===-1&&adf===1;
-    if(t==='n') return (adf===1&&adr===2)||(adf===2&&adr===1);
-    if(t==='k') return Math.max(adf,adr)===1;
-    if(t==='b'&&adf!==adr) return false;
-    if(t==='r'&&!(df===0||dr===0)) return false;
-    if(t==='q'&&!(df===0||dr===0||adf===adr)) return false;
-    if(!['b','r','q'].includes(t)) return false;
-    const sf=Math.sign(df), sr=Math.sign(dr); let f=fromF+sf,r=fromR+sr;
-    while(f!==toF||r!==toR){if(pieceAt(f,r))return false;f+=sf;r+=sr;}
-    return true;
-  };
-  for(let fr=1;fr<=8;fr++) for(let ff=0;ff<8;ff++){
-    const attacker=pieceAt(ff,fr); if(!attacker) continue;
-    for(let tr=1;tr<=8;tr++) for(let tf=0;tf<8;tf++){
-      const target=pieceAt(tf,tr); if(!target||target.color===attacker.color||target.type==='k') continue;
-      if(!attacksSquare(ff,fr,tf,tr,attacker)) continue;
-      // Prioritize loose pieces and attacks by equal/lower-value pieces; avoid flooding the board.
-      let defended=false;
-      for(let df=0;df<8&&!defended;df++) for(let dr=1;dr<=8&&!defended;dr++){
-        const defender=pieceAt(df,dr);
-        if(defender&&(df!==tf||dr!==tr)&&defender.color===target.color&&attacksSquare(df,dr,tf,tr,defender)) defended=true;
-      }
-      const gain=(value[target.type]||0)-(value[attacker.type]||0);
-      if(!defended||gain>=0) attackers.push({from:files[ff]+fr,to:files[tf]+tr,score:(value[target.type]||0)*2-(value[attacker.type]||0)+(defended?0:3),color:attacker.color});
-    }
-  }
-  // Limit red tactical arrows to the clearest threats for each side.
-  for(const color of ['w','b']){
-    const list=attackers.filter(x=>x.color===color).sort((a,b)=>b.score-a.score).slice(0,2);
-    list.forEach(x=>addLine(x.from,x.to,'threat'));
-  }
-}
-
 function drawBestMoveArrows() {
   ['arrow-best','arrow-alt','arrow-third'].forEach(id => { const el=$(id); if(el) el.style.display='none'; });
-  if (bestMoveData) {
-    const candidates = bestMoveData.arrowCandidates || [];
-    const ids = { best: 'arrow-best', good: 'arrow-alt', normal: 'arrow-third' };
-    if (bestMoveData.selectedUci) {
-      const selected = candidates.find(x => x.uci === bestMoveData.selectedUci);
-      const tier = selected ? selected.tier : 'normal';
-      drawArrowLine(ids[tier], bestMoveData.selectedUci);
-    } else if (candidates.length) {
-      candidates.forEach((candidate, i) => {
-        const id = i === 0 ? 'arrow-best' : (i === 1 ? 'arrow-alt' : 'arrow-third');
-        drawArrowLine(id, candidate.uci);
-      });
-    } else {
-      if (bestMoveData.m1) drawArrowLine('arrow-best', bestMoveData.m1);
-      if (bestMoveData.m2 && bestMoveData.m2 !== bestMoveData.m1) drawArrowLine('arrow-alt', bestMoveData.m2);
-      if (bestMoveData.m3 && bestMoveData.m3 !== bestMoveData.m1 && bestMoveData.m3 !== bestMoveData.m2) drawArrowLine('arrow-third', bestMoveData.m3);
-    }
+  if (!bestMoveData) return;
+  const candidates = bestMoveData.arrowCandidates || [];
+  const ids = { best: 'arrow-best', good: 'arrow-alt', normal: 'arrow-third' };
+  if (bestMoveData.selectedUci) {
+    const selected = candidates.find(x => x.uci === bestMoveData.selectedUci);
+    const tier = selected ? selected.tier : 'normal';
+    drawArrowLine(ids[tier], bestMoveData.selectedUci);
+    return;
   }
-  drawTacticalArrows();
+  if (candidates.length) {
+    candidates.forEach((candidate, i) => {
+      const id = i === 0 ? 'arrow-best' : (i === 1 ? 'arrow-alt' : 'arrow-third');
+      drawArrowLine(id, candidate.uci);
+    });
+    return;
+  }
+  if (bestMoveData.m1) drawArrowLine('arrow-best', bestMoveData.m1);
+  if (bestMoveData.m2 && bestMoveData.m2 !== bestMoveData.m1) drawArrowLine('arrow-alt', bestMoveData.m2);
+  if (bestMoveData.m3 && bestMoveData.m3 !== bestMoveData.m1 && bestMoveData.m3 !== bestMoveData.m2) drawArrowLine('arrow-third', bestMoveData.m3);
 }
 
 /* Human suggestions are generated for the side actually to move, whether it is the user or AI. */
@@ -1971,7 +1718,7 @@ async function renderOpeningInsights(fen, token) {
 }
 
 function addArrowLegend() {
-  if (!$('coach-box').querySelector('.analysis-legend')) $('coach-box').insertAdjacentHTML('beforeend', '<div class="analysis-legend"><span><i class="gold"></i>ذهبي: أفضل نقلة</span><span><i class="blue"></i>أزرق: نقلة جيدة</span><span><i class="green"></i>أخضر: بديل عادي</span><span><i class="purple"></i>بنفسجي: Pin 📌</span><span><i class="red"></i>أحمر: تهديد</span></div>');
+  if (!$('coach-box').querySelector('.analysis-legend')) $('coach-box').insertAdjacentHTML('beforeend', '<div class="analysis-legend"><span><i class="gold"></i>ذهبي: أفضل نقلة</span><span><i class="blue"></i>أزرق: نقلة جيدة</span><span><i class="green"></i>أخضر: بديل عادي</span></div>');
 }
 
 /* After each legal move, analyse the new side-to-move and show its own advice. */
@@ -2056,127 +1803,6 @@ buildSettingsUI(); initEditPalette(); renderBoard(); updateTurnIndicator(); upda
 memReady.then(() => autoEvaluate());
 memReady.then(() => setTimeout(cloudSync, 1500));
 if (settings.aiEnabled) setTimeout(maybeAIPlay, 700);
-
-
-/* ================================================================
-   Chess motion + sound polish layer
-   Lightweight CSS/WebAudio effects; no external assets or libraries.
-   ================================================================ */
-settings.animations = settings.animations !== false;
-function applyMotionPreference() {
-  document.documentElement.classList.toggle('motion-off', !settings.animations);
-  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  document.documentElement.classList.toggle('system-reduced-motion', !!reduced);
-}
-function toggleAnimations() {
-  settings.animations = !settings.animations;
-  saveSettings(); applyMotionPreference(); buildSettingsUI();
-  if (settings.sound) playSound('button');
-  showToast(settings.animations ? 'الحركات والانميشن مفعّلة' : 'تم إيقاف الحركات');
-}
-const _buildSettingsMotionFX = buildSettingsUI;
-buildSettingsUI = function () {
-  _buildSettingsMotionFX();
-  const host = $('settings-extra');
-  if (host && !$('toggle-animations')) {
-    host.insertAdjacentHTML('beforeend', `<button class="list-btn" id="toggle-animations" onclick="toggleAnimations()">الحركات والانميشن: ${settings.animations ? 'مفعّلة' : 'متوقفة'}<span>حركة القطع، التهديد، الأسهم والانتقالات</span></button>`);
-  } else if (host && $('toggle-animations')) {
-    $('toggle-animations').innerHTML = `الحركات والانميشن: ${settings.animations ? 'مفعّلة' : 'متوقفة'}<span>حركة القطع، التهديد، الأسهم والانتقالات</span>`;
-  }
-};
-
-function animateMoveFeedback(move) {
-  if (!settings.animations || !move) return;
-  const from = document.querySelector(`[data-square="${move.from}"]`);
-  const to = document.querySelector(`[data-square="${move.to}"]`);
-  if (from) { from.classList.remove('fx-origin'); void from.offsetWidth; from.classList.add('fx-origin'); }
-  if (to) {
-    to.classList.remove('fx-arrival', 'fx-capture', 'fx-promotion');
-    void to.offsetWidth;
-    to.classList.add(move.captured ? 'fx-capture' : (move.promotion ? 'fx-promotion' : 'fx-arrival'));
-    const landedPiece = to.querySelector('.piece');
-    if (landedPiece) {
-      landedPiece.classList.remove('piece-landing', 'piece-promotion');
-      void landedPiece.offsetWidth;
-      landedPiece.classList.add(move.promotion ? 'piece-promotion' : 'piece-landing');
-      landedPiece.addEventListener('animationend', () => landedPiece.classList.remove('piece-landing', 'piece-promotion'), { once:true });
-    }
-    if (move.captured) {
-      const burst = document.createElement('span'); burst.className = 'capture-burst'; to.appendChild(burst);
-      setTimeout(() => burst.remove(), 360);
-    }
-  }
-  if (move.flags && /[kq]/.test(move.flags)) {
-    const rookTo = move.flags.includes('k') ? (move.color === 'w' ? 'f1' : 'f8') : (move.color === 'w' ? 'd1' : 'd8');
-    const rookSq = document.querySelector(`[data-square="${rookTo}"]`);
-    if (rookSq) { rookSq.classList.remove('fx-arrival'); void rookSq.offsetWidth; rookSq.classList.add('fx-arrival'); }
-  }
-}
-const _executeMoveMotionFX = executeMove;
-executeMove = function (from, to, promo) {
-  let preview = null;
-  try { preview = game.moves({ verbose: true }).find(m => m.from === from && m.to === to && (!promo || m.promotion === promo)); } catch (e) {}
-  _executeMoveMotionFX(from, to, promo);
-  if (preview) {
-    animateMoveFeedback(preview);
-  }
-};
-
-/* Board arrows enter smoothly and subtly breathe without distracting from play. */
-const _drawArrowMotionFX = drawArrowLine;
-drawArrowLine = function (id, uci) {
-  _drawArrowMotionFX(id, uci);
-  const el = $(id);
-  if (el) {
-    el.classList.remove('arrow-enter');
-    el.style.strokeDasharray = 'none';
-    el.style.strokeDashoffset = '0';
-    if (uci && settings.animations) {
-      void el.getBoundingClientRect();
-      el.classList.add('arrow-enter');
-    }
-  }
-};
-
-/* Selection and AI-thinking cues. */
-const _handleSquareTapMotionFX = handleSquareTap;
-handleSquareTap = function (square) {
-  const before = selectedSquare;
-  _handleSquareTapMotionFX(square);
-  if (settings.sound && selectedSquare && selectedSquare !== before) playSound('select');
-};
-const _maybeAIPlayMotionFX = maybeAIPlay;
-maybeAIPlay = async function () {
-  if (settings.animations && settings.aiEnabled && !game.game_over() && game.turn() !== playerColor) {
-    $('turn-indicator').classList.add('ai-thinking-fx');
-    if (settings.sound) playSound('ai');
-  }
-  try { return await _maybeAIPlayMotionFX(); }
-  finally { $('turn-indicator').classList.remove('ai-thinking-fx'); }
-};
-
-/* Game-end flourish only fires on the transition into a terminal state. */
-let _lastTerminalFenFX = '';
-const _updateTurnIndicatorMotionFX = updateTurnIndicator;
-updateTurnIndicator = function () {
-  _updateTurnIndicatorMotionFX();
-  const terminal = game.game_over();
-  const fen = terminal ? game.fen() : '';
-  if (terminal && fen !== _lastTerminalFenFX) {
-    // executeMove -> playMoveSound owns the one-shot terminal audio/haptic.
-    _lastTerminalFenFX = fen;
-  } else if (!terminal) _lastTerminalFenFX = '';
-  $('turn-indicator').classList.toggle('turn-change-fx', settings.animations && !terminal);
-};
-
-/* Avoid animation when the OS asks for reduced motion, and re-apply after load. */
-applyMotionPreference();
-buildSettingsUI();
-if (window.matchMedia) {
-  const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-  if (motionQuery.addEventListener) motionQuery.addEventListener('change', applyMotionPreference);
-}
-
 </script>
 </body>
 </html>
