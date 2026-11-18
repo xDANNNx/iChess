@@ -192,6 +192,15 @@ body.nocoords .coord-file,body.nocoords .coord-rank{display:none}
 .brand{white-space:nowrap}.h-btns{flex-shrink:0}
 @media (max-width:430px){.brand span{display:none}.icon-btn{width:34px!important}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* Two-sided analysis additions */
+.analysis-legend{display:inline-flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:4px;color:var(--muted);font-size:9.5px}
+.analysis-legend span{white-space:nowrap}
+.analysis-legend i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-inline-end:3px}
+.analysis-legend .gold{background:#FFD700}.analysis-legend .blue{background:#5b9bf0}.analysis-legend .green{background:#58b878}
+.coach-box .ln.book-line{border-color:rgba(224,176,74,.55)}
+.coach-box .side-label{color:var(--muted);font-size:10px;font-weight:700}
+
 </style>
 </head>
 <body>
@@ -240,9 +249,11 @@ body.nocoords .coord-file,body.nocoords .coord-rank{display:none}
           <defs>
             <marker id="arrow-gold" markerWidth="3" markerHeight="3" refX="1.2" refY="1.5" orient="auto"><path d="M0 0 3 1.5 0 3z" fill="#FFD700"/></marker>
             <marker id="arrow-blue" markerWidth="3" markerHeight="3" refX="1.2" refY="1.5" orient="auto"><path d="M0 0 3 1.5 0 3z" fill="#5b9bf0"/></marker>
+            <marker id="arrow-green" markerWidth="3" markerHeight="3" refX="1.2" refY="1.5" orient="auto"><path d="M0 0 3 1.5 0 3z" fill="#58b878"/></marker>
           </defs>
           <line id="arrow-alt" stroke="#5b9bf0" stroke-width=".16" stroke-linecap="round" marker-end="url(#arrow-blue)" opacity=".85" style="display:none"/>
-          <line id="arrow-best" stroke="#FFD700" stroke-width=".2" stroke-linecap="round" marker-end="url(#arrow-gold)" opacity=".92" style="display:none"/>
+          <line id="arrow-best" stroke="#FFD700" stroke-width=".2" stroke-linecap="round" marker-end="url(#arrow-gold)" opacity=".95" style="display:none"/>
+          <line id="arrow-third" stroke="#58b878" stroke-width=".16" stroke-linecap="round" marker-end="url(#arrow-green)" opacity=".85" style="display:none"/>
         </svg>
         <div class="checkmate-overlay" id="checkmate-overlay">
           <i class="fa-solid fa-crown checkmate-icon"></i>
@@ -404,7 +415,7 @@ const STYLES = {
 };
 
 let settings = {
-  level: 18, theme: 0, sound: true, vol: 0.7, haptic: true, phase: 'auto', style: 'off', ph: { o: true, m: true, e: true }, aiEnabled: false, humanMoves: true
+  level: 18, theme: 0, sound: true, vol: 0.7, haptic: true, phase: 'auto', style: 'off', ph: { o: true, m: true, e: true }, aiEnabled: false
 };
 
 try {
@@ -1101,7 +1112,6 @@ async function runAutoEval(moveObj, attempt) {
     generateCoachExplanation(startFen, r.evalScore, r.mateIn, H ? H.m1 : r.bestMoveUci);
     bestMoveData = { m1: H ? H.m1 : r.bestMoveUci, m2: H ? H.m2 : null, ev: r.evalScore, mate: r.mateIn, src: cached ? 'ذاكرة' : 'AI تلقائي', lines: H ? [] : r.lines };
     drawBestMoveArrows();
-    if (H) showHuman(H, startFen);
     const be = moveObj && bc && learnedDB[bc];
     if (be) { lastMoveClassification = classifyMove(be.evalScore, r.evalScore, moveObj, be.bestMoveUci, bn); renderBoard(); }
     previousEval = r.evalScore;
@@ -1133,7 +1143,7 @@ async function analyzePosition() {
     bestMoveData = rd;
     updateEvalBar(rd.ev, rd.mate);
     generateCoachExplanation(startFen, rd.ev, rd.mate, rd.m1);
-    drawBestMoveArrows(); if (H) showHuman(H, startFen); else showLines(rd);
+    drawBestMoveArrows(); if (H) showHuman(H); else showLines(rd);
     playSound('check');
   } catch (e) { if (game.fen() === startFen) showToast(failMsg()); }
   finally { isAnalyzing = false; btn.disabled = false; spinner.remove(); $('btn-analyze-text').textContent = 'أفضل نقلة'; }
@@ -1188,12 +1198,10 @@ function humanize(fen, r) {
     return { list, m1: list[0].uci, m2: list[1] ? list[1].uci : null };
   } catch (e) { return null; }
 }
-function showHuman(H, fen = game.fen()) {
-  if (!H || !H.list || !H.list.length) return;
+function showHuman(H) {
   humanList = H.list;
   const lv = (LEVELS.find(l => l[0] === settings.level) || LEVELS[LEVELS.length - 1])[1];
-  const side = fen.split(' ')[1] === playerColor ? 'لك (المستخدم)' : 'للخصم';
-  $('coach-box').insertAdjacentHTML('beforeend', `<br>🧑 <strong>اقتراحات بشرية ${side} — ${lv}:</strong> ` + H.list.map((x, i) => `<span class="ln" onclick="pickHuman(${i})"><b>${Math.round(x.p * 100)}%</b> ${x.san}</span>`).join(''));
+  $('coach-box').insertAdjacentHTML('beforeend', `<br>🧑 <strong>نقلات بشرية محتملة (${lv}):</strong> ` + H.list.map((x, i) => `<span class="ln" onclick="pickHuman(${i})"><b>${Math.round(x.p * 100)}%</b> ${x.san}</span>`).join(''));
 }
 function pickHuman(i) { const x = humanList[i]; if (!x || !bestMoveData) return; triggerHaptic('light'); bestMoveData.m1 = x.uci; bestMoveData.m2 = null; drawBestMoveArrows(); }
 function humanDelay(fen, mv) {
@@ -1202,35 +1210,13 @@ function humanDelay(fen, mv) {
   if (m && m.captured) d *= .75; if (n <= 2) d *= .5; if ((parseInt(fen.split(' ')[5]) || 1) <= 6) d *= .7;
   return d * (settings.level <= 2 ? .75 : settings.level >= 12 ? 1.25 : 1);
 }
-function toggleHumanMoves() {
-  triggerHaptic('light');
-  settings.humanMoves = !settings.humanMoves;
-  saveSettings();
-  buildSettingsUI();
-  aiThinking = false;
-  showToast(settings.humanMoves
-    ? '🎭 محاكاة النقلات البشرية مفعّلة'
-    : '♟️ المحاكاة متوقفة — أفضل نقلات المحرك');
-  if (settings.aiEnabled) setTimeout(maybeAIPlay, 250);
-}
-
 async function getAIMove(fen, level) {
   lastAiPick = null;
-  // Human mode may use the existing opening repertoire; engine mode never overrides its best move.
-  if (settings.humanMoves) {
-    const bk = londonMove(fen);
-    if (bk && legalUci(fen, bk.from + bk.to + (bk.promotion || ''))) return bk;
-  }
+  const bk = londonMove(fen); if (bk) return bk;
   const p = fen.split(' '); p[2] = '-'; p[3] = '-';
-  let r = null;
-  try { r = await getAnalysis(p.join(' '), level >= 18 ? 16 : 12); }
-  catch (e) { console.warn('AI analysis:', e.message); }
+  let r = null; try { r = await getAnalysis(p.join(' '), level >= 18 ? 16 : 12); } catch (e) { console.warn('AI analysis:', e.message); }
   if (!r || !legalUci(fen, r.bestMoveUci)) return null;
   const u = r.bestMoveUci;
-  if (!settings.humanMoves) {
-    return { from: u.slice(0, 2), to: u.slice(2, 4), promotion: u[4] || 'q' };
-  }
-  // Sample from a level-conditioned human-style distribution; fall back to the legal engine move.
   return humanMove(fen, level, r) || { from: u.slice(0, 2), to: u.slice(2, 4), promotion: u[4] || 'q' };
 }
 
@@ -1249,7 +1235,7 @@ async function maybeAIPlay() {
     await new Promise(r => setTimeout(r, 200 + Math.random() * 300));
     if (game.fen() !== expectedFen) return;
     const move = await getAIMove(game.fen(), settings.level);
-    if (move) { const wait = settings.humanMoves ? humanDelay(expectedFen, move) : (350 + Math.random() * 450); const w = wait - (Date.now() - t0); if (w > 0) await new Promise(r => setTimeout(r, w)); }
+    if (move) { const w = humanDelay(expectedFen, move) - (Date.now() - t0); if (w > 0) await new Promise(r => setTimeout(r, w)); }
     if (move && game.fen() === expectedFen) {
       aiRetry = 0; executeMove(move.from, move.to, move.promotion);
     } else if (!move && game.fen() === expectedFen && aiRetry++ < 6) { showToast('⏳ الخدمة مشغولة — الخصم يعيد المحاولة'); setTimeout(maybeAIPlay, 5000); }
@@ -1280,6 +1266,13 @@ function drawArrowLine(id, uci) {
   const start = getPt(uci.slice(0, 2)); const end = getPt(uci.slice(2, 4));
   el.setAttribute('x1', start[0]); el.setAttribute('y1', start[1]); el.setAttribute('x2', end[0]); el.setAttribute('y2', end[1]); el.style.display = 'block';
 }
+const _clearAnalysisTwoSided = clearAnalysis;
+clearAnalysis = function () {
+  _clearAnalysisTwoSided();
+  const third = $('arrow-third');
+  if (third) third.style.display = 'none';
+};
+
 function drawBestMoveArrows() { if (!bestMoveData) return; drawArrowLine('arrow-best', bestMoveData.m1); drawArrowLine('arrow-alt', bestMoveData.m2 && bestMoveData.m2 !== bestMoveData.m1 ? bestMoveData.m2 : null); }
 function playSuggestedMove() { if (bestMoveData) { const m = bestMoveData.m1; executeMove(m.slice(0, 2), m.slice(2, 4), m[4] || 'q'); } }
 
@@ -1301,7 +1294,7 @@ const _bsu = buildSettingsUI;
 buildSettingsUI = function () {
   _bsu();
   const names = { auto: 'تلقائي', dark: 'داكن', light: 'فاتح' };
-  $('settings-extra').innerHTML = `<button class="list-btn" onclick="cycleUI()">مظهر التطبيق: ${names[settings.ui]}<span>اضغط للتبديل</span></button><button class="list-btn" onclick="settings.coords=!settings.coords;saveSettings();buildSettingsUI()">إحداثيات الرقعة: ${settings.coords ? 'ظاهرة' : 'مخفية'}<span>a-h / 1-8</span></button><h4>الافتتاح</h4><button class="list-btn" onclick="settings.london=!settings.london;saveSettings();buildSettingsUI()">افتتاحية لندن: ${settings.london ? 'مفعّلة' : 'متوقفة'}<span>للخصم والتلميحات</span></button><button class="list-btn" onclick="settings.humanHints=!settings.humanHints;saveSettings();buildSettingsUI();clearAnalysis()">🧑 اقتراحات بشرية للطرفين: ${settings.humanHints ? 'مفعّلة' : 'متوقفة'}<span>تظهر لصاحب الدور: لك أو للخصم، مع نسب احتمالية</span></button><button class="list-btn ${settings.humanMoves ? 'active' : ''}" onclick="toggleHumanMoves()">🎭 محاكاة نقلات الخصم: ${settings.humanMoves ? 'مفعّلة' : 'متوقفة'}<span>${settings.humanMoves ? 'الخصم يلعب بأسلوب بشري حسب المستوى' : 'الخصم يختار أفضل نقلة من المحرك'}</span></button><h4>المزامنة السحابية</h4><button class="list-btn" onclick="cloudSync(true)">☁️ مزامنة الآن<span>${memN} وضعية محفوظة</span></button><button class="list-btn" onclick="showSyncKey()">🔑 مفتاح المزامنة<span>لنقل بياناتك لجهاز آخر</span></button><h4>ذاكرة الوضعيات</h4><button class="list-btn" onclick="exportMemory()">💾 تصدير الذاكرة<span>نسخة احتياطية</span></button><button class="list-btn" onclick="$('mem-file').click()">📥 استيراد الذاكرة<span>من ملف</span></button><input type="file" id="mem-file" accept=".json" hidden onchange="importMemory(this)">`;
+  $('settings-extra').innerHTML = `<button class="list-btn" onclick="cycleUI()">مظهر التطبيق: ${names[settings.ui]}<span>اضغط للتبديل</span></button><button class="list-btn" onclick="settings.coords=!settings.coords;saveSettings();buildSettingsUI()">إحداثيات الرقعة: ${settings.coords ? 'ظاهرة' : 'مخفية'}<span>a-h / 1-8</span></button><h4>الافتتاح</h4><button class="list-btn" onclick="settings.london=!settings.london;saveSettings();buildSettingsUI()">افتتاحية لندن: ${settings.london ? 'مفعّلة' : 'متوقفة'}<span>خطة افتتاحية للأبيض والأسود</span></button><button class="list-btn" onclick="settings.humanHints=!settings.humanHints;saveSettings();buildSettingsUI();clearAnalysis()">🧑 اقتراحات بشرية حسب المستوى: ${settings.humanHints ? 'مفعّلة' : 'متوقفة'}<span>اقتراحات بشرية للأبيض والأسود بحسب الدور الحالي</span></button><h4>المزامنة السحابية</h4><button class="list-btn" onclick="cloudSync(true)">☁️ مزامنة الآن<span>${memN} وضعية محفوظة</span></button><button class="list-btn" onclick="showSyncKey()">🔑 مفتاح المزامنة<span>لنقل بياناتك لجهاز آخر</span></button><h4>ذاكرة الوضعيات</h4><button class="list-btn" onclick="exportMemory()">💾 تصدير الذاكرة<span>نسخة احتياطية</span></button><button class="list-btn" onclick="$('mem-file').click()">📥 استيراد الذاكرة<span>من ملف</span></button><input type="file" id="mem-file" accept=".json" hidden onchange="importMemory(this)">`;
   applyUI();
 };
 function cycleUI() { settings.ui = { auto: 'dark', dark: 'light', light: 'auto' }[settings.ui] || 'auto'; saveSettings(); buildSettingsUI(); }
@@ -1566,6 +1559,244 @@ function showSyncKey() {
   if (k && k !== syncKey && /^[A-Za-z0-9_-]{32,64}$/.test(k.trim())) { syncKey = k.trim(); cloudT = 0; try { localStorage.setItem('chess_sync_key', syncKey); localStorage.setItem('chess_cloud_t', 0); } catch (e) {} cloudFail = 0; cloudSync(true); }
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden) cloudSync(); });
+
+
+/* ================================================================
+   Two-sided analysis layer
+   - Suggestions and opening repertoire follow game.turn(), not playerColor.
+   - Opening Explorer master database provides opening names and move frequencies.
+   - Three arrow tiers: gold best, blue good, green normal alternative.
+   ================================================================ */
+settings.openingBook = settings.openingBook !== false;
+let openingList = [];
+const openingCache = new Map();
+let twoSideAnalysisToken = 0;
+
+/* Keep the existing settings UI and append one independent opening-book switch. */
+const _buildSettingsTwoSided = buildSettingsUI;
+buildSettingsUI = function () {
+  _buildSettingsTwoSided();
+  const host = $('settings-extra');
+  if (host && !$('toggle-opening-book')) {
+    host.insertAdjacentHTML('beforeend', `<button class="list-btn" id="toggle-opening-book" onclick="toggleOpeningBook()">📚 قاعدة افتتاحيات الأساتذة للطرفين: ${settings.openingBook ? 'مفعّلة' : 'متوقفة'}<span>أسماء الافتتاحيات ونقلات الأبيض والأسود</span></button>`);
+  } else if (host && $('toggle-opening-book')) {
+    $('toggle-opening-book').innerHTML = `📚 قاعدة افتتاحيات الأساتذة للطرفين: ${settings.openingBook ? 'مفعّلة' : 'متوقفة'}<span>أسماء الافتتاحيات ونقلات الأبيض والأسود</span>`;
+  }
+};
+function toggleOpeningBook() {
+  settings.openingBook = !settings.openingBook;
+  saveSettings();
+  buildSettingsUI();
+  clearAnalysis();
+  autoEvaluate();
+  showToast(settings.openingBook ? '📚 افتتاحيات الأساتذة مفعّلة للطرفين' : 'تم إيقاف قاعدة الافتتاحيات');
+}
+
+function openingMoveCount(m) {
+  return Math.max(0, Number(m.white)||0) + Math.max(0, Number(m.draws)||0) + Math.max(0, Number(m.black)||0);
+}
+async function getMastersOpening(fen) {
+  if (!settings.openingBook) return null;
+  const fullMove = Number((fen.split(' ')[5] || '1'));
+  if (fullMove > 22) return null;
+  if (openingCache.has(fen)) return openingCache.get(fen);
+  const promise = (async () => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3200);
+    try {
+      const q = new URLSearchParams({ fen, moves: '6' });
+      const response = await fetch('https://explorer.lichess.ovh/masters?' + q.toString(), { signal: controller.signal, headers: { 'Accept': 'application/json' } });
+      if (!response.ok) throw new Error('Opening Explorer ' + response.status);
+      const data = await response.json();
+      if (!data || !Array.isArray(data.moves)) return null;
+      return data;
+    } catch (e) { return null; }
+    finally { clearTimeout(timer); }
+  })();
+  openingCache.set(fen, promise);
+  const result = await promise;
+  if (!result) openingCache.delete(fen);
+  return result;
+}
+
+function sideName(color) { return color === 'w' ? 'الأبيض' : 'الأسود'; }
+function toMoveObject(uci) {
+  if (!uci || uci.length < 4) return null;
+  return { from: uci.slice(0,2), to: uci.slice(2,4), promotion: uci[4] || 'q' };
+}
+function engineArrowCandidates(fen, result) {
+  const lines = (result && Array.isArray(result.lines)) ? result.lines : [];
+  const side = new Chess(fen).turn();
+  const sign = side === 'w' ? 1 : -1;
+  const getScore = line => {
+    if (line.mate !== undefined && line.mate !== null) return line.mate > 0 ? 100 : -100;
+    return (Number(line.cp) || 0) / 100;
+  };
+  const legal = new Chess(fen).moves({ verbose: true });
+  const found = lines.map(line => {
+    const uci = (line.moves || '').split(' ')[0];
+    const move = legal.find(m => m.from + m.to + (m.promotion || '') === uci || m.from + m.to === uci.slice(0,4));
+    return move ? { uci, score: sign * getScore(line) } : null;
+  }).filter(Boolean);
+  if (!found.length && result && legalUci(fen, result.bestMoveUci)) found.push({ uci: result.bestMoveUci, score: 0 });
+  if (!found.length) return [];
+  found.sort((a,b) => b.score - a.score);
+  const best = Math.max(...found.map(x => x.score));
+  return found.slice(0,3).map((x,i) => ({
+    uci: x.uci,
+    tier: i === 0 ? 'best' : (best - x.score <= 0.5 ? 'good' : 'normal'),
+    loss: Math.max(0, best - x.score)
+  }));
+}
+
+function drawBestMoveArrows() {
+  ['arrow-best','arrow-alt','arrow-third'].forEach(id => { const el=$(id); if(el) el.style.display='none'; });
+  if (!bestMoveData) return;
+  const candidates = bestMoveData.arrowCandidates || [];
+  const ids = { best: 'arrow-best', good: 'arrow-alt', normal: 'arrow-third' };
+  if (bestMoveData.selectedUci) {
+    const selected = candidates.find(x => x.uci === bestMoveData.selectedUci);
+    const tier = selected ? selected.tier : 'normal';
+    drawArrowLine(ids[tier], bestMoveData.selectedUci);
+    return;
+  }
+  if (candidates.length) {
+    candidates.forEach((candidate, i) => {
+      const id = i === 0 ? 'arrow-best' : (i === 1 ? 'arrow-alt' : 'arrow-third');
+      drawArrowLine(id, candidate.uci);
+    });
+    return;
+  }
+  if (bestMoveData.m1) drawArrowLine('arrow-best', bestMoveData.m1);
+  if (bestMoveData.m2 && bestMoveData.m2 !== bestMoveData.m1) drawArrowLine('arrow-alt', bestMoveData.m2);
+  if (bestMoveData.m3 && bestMoveData.m3 !== bestMoveData.m1 && bestMoveData.m3 !== bestMoveData.m2) drawArrowLine('arrow-third', bestMoveData.m3);
+}
+
+/* Human suggestions are generated for the side actually to move, whether it is the user or AI. */
+function showHuman(H) {
+  if (!H || !H.list || !H.list.length) return;
+  humanList = H.list;
+  const side = sideName(game.turn());
+  const lv = (LEVELS.find(l => l[0] === settings.level) || LEVELS[LEVELS.length - 1])[1];
+  $('coach-box').insertAdjacentHTML('beforeend', `<br><span class="side-label">🧑 اقتراحات بشرية لـ${side} · مستوى ${lv}:</span> ` + H.list.map((x, i) => `<span class="ln" onclick="pickHuman(${i})"><b>${Math.round(x.p * 100)}%</b> ${x.san}</span>`).join(''));
+}
+function pickHuman(i) {
+  const x = humanList[i];
+  if (!x || !bestMoveData) return;
+  triggerHaptic('light');
+  bestMoveData.m1 = x.uci;
+  bestMoveData.selectedUci = x.uci;
+  drawBestMoveArrows();
+}
+function pickOpeningMove(i) {
+  const x = openingList[i];
+  if (!x || !bestMoveData) return;
+  triggerHaptic('light');
+  bestMoveData.m1 = x.uci;
+  bestMoveData.selectedUci = x.uci;
+  drawBestMoveArrows();
+}
+
+async function renderOpeningInsights(fen, token) {
+  if (!settings.openingBook) { $('chip-opening').textContent = ''; openingList = []; return; }
+  $('chip-opening').textContent = ''; openingList = [];
+  const data = await getMastersOpening(fen);
+  if (game.fen() !== fen || (token && token !== twoSideAnalysisToken)) return;
+  if (!data) return;
+  const opening = data.opening;
+  if (opening && opening.name) $('chip-opening').textContent = (opening.eco ? opening.eco + ' · ' : '') + opening.name;
+  else $('chip-opening').textContent = '';
+  const side = game.turn();
+  const total = data.moves.reduce((sum,m) => sum + openingMoveCount(m), 0);
+  openingList = data.moves.slice().sort((a,b) => openingMoveCount(b)-openingMoveCount(a)).slice(0,3).map(m => ({
+    uci: m.uci, san: m.san, count: openingMoveCount(m), p: total ? openingMoveCount(m)/total : 0
+  })).filter(m => legalUci(fen, m.uci));
+  if (!openingList.length) return;
+  const name = opening && opening.name ? opening.name : 'افتتاحية من قاعدة مباريات الأساتذة';
+  const html = openingList.map((m,i) => `<span class="ln book-line" onclick="pickOpeningMove(${i})"><b>${Math.round(m.p*100)}%</b> ${m.san}</span>`).join('');
+  $('coach-box').insertAdjacentHTML('beforeend', `<br><span class="side-label">📚 ${name} · نقلات ${sideName(side)} الشائعة:</span> ${html}`);
+}
+
+function addArrowLegend() {
+  if (!$('coach-box').querySelector('.analysis-legend')) $('coach-box').insertAdjacentHTML('beforeend', '<div class="analysis-legend"><span><i class="gold"></i>ذهبي: أفضل نقلة</span><span><i class="blue"></i>أزرق: نقلة جيدة</span><span><i class="green"></i>أخضر: بديل عادي</span></div>');
+}
+
+/* After each legal move, analyse the new side-to-move and show its own advice. */
+const _runAutoEvalTwoSided = runAutoEval;
+runAutoEval = async function (moveObj, attempt) {
+  const snapshot = game.fen();
+  const token = ++twoSideAnalysisToken;
+  await _runAutoEvalTwoSided(moveObj, attempt);
+  if (game.fen() !== snapshot || isEditMode || game.game_over()) return;
+  const result = learnedDB[getCleanFen()];
+  if (!result) return;
+  if (bestMoveData) bestMoveData.arrowCandidates = engineArrowCandidates(snapshot, result);
+  if (settings.humanHints) {
+    const H = humanize(snapshot, result);
+    if (H) showHuman(H);
+  }
+  if (moveObj && lastMoveClassification) {
+    $('coach-box').insertAdjacentHTML('afterbegin', `<span class="side-label">تقييم نقلة ${sideName(moveObj.color)}:</span> `);
+  }
+  addArrowLegend();
+  drawBestMoveArrows();
+  await renderOpeningInsights(snapshot, token);
+  addArrowLegend();
+};
+
+/* Manual deep analysis uses exactly the same two-sided opening and arrow logic. */
+const _analyzePositionTwoSided = analyzePosition;
+analyzePosition = async function () {
+  const snapshot = game.fen();
+  const token = ++twoSideAnalysisToken;
+  await _analyzePositionTwoSided();
+  if (game.fen() !== snapshot || game.game_over()) return;
+  const result = learnedDB[getCleanFen()];
+  if (result && bestMoveData) bestMoveData.arrowCandidates = engineArrowCandidates(snapshot, result);
+  drawBestMoveArrows();
+  await renderOpeningInsights(snapshot, token);
+  addArrowLegend();
+};
+
+/* AI uses the same master opening database for either colour, then falls back to its existing repertoire/engine. */
+const _getAIMoveTwoSided = getAIMove;
+getAIMove = async function (fen, level) {
+  if (settings.openingBook && Number(fen.split(' ')[5] || 1) <= 18) {
+    const london = londonMove(fen);
+    if (london) return london;
+    const book = await getMastersOpening(fen);
+    if (game.fen() === fen && book && Array.isArray(book.moves)) {
+      const candidates = book.moves.slice().sort((a,b) => openingMoveCount(b)-openingMoveCount(a));
+      const chosen = candidates.find(m => openingMoveCount(m) >= 8 && legalUci(fen, m.uci));
+      if (chosen) return toMoveObject(chosen.uci);
+    }
+  }
+  return _getAIMoveTwoSided(fen, level);
+};
+
+/* Preserve clickable MultiPV line selection with the three-colour arrow renderer. */
+const _pickLineTwoSided = pickLine;
+pickLine = function (i) {
+  const pv = bestMoveData && bestMoveData.lines && bestMoveData.lines[i];
+  if (!pv) return _pickLineTwoSided(i);
+  const uci = (pv.moves || '').split(' ')[0];
+  if (!uci || !legalUci(game.fen(), uci)) return;
+  triggerHaptic('light');
+  bestMoveData.m1 = uci;
+  bestMoveData.selectedUci = uci;
+  drawBestMoveArrows();
+};
+
+/* Keep the opening toggle in sync with the original London setting's label. */
+const _buildSettingsOriginalTwoSided = buildSettingsUI;
+buildSettingsUI = function () {
+  _buildSettingsOriginalTwoSided();
+  const londonButton = $('settings-extra') && $('settings-extra').querySelector('button[onclick*="settings.london"]');
+  if (londonButton) londonButton.innerHTML = `افتتاحية لندن: ${settings.london ? 'مفعّلة' : 'متوقفة'}<span>خطة افتتاحية للأبيض والأسود</span>`;
+  const bookButton = $('toggle-opening-book');
+  if (bookButton) bookButton.innerHTML = `📚 قاعدة افتتاحيات الأساتذة للطرفين: ${settings.openingBook ? 'مفعّلة' : 'متوقفة'}<span>أسماء الافتتاحيات ونقلات الأبيض والأسود</span>`;
+};
+
 
 const memReady = loadLearningDB();
 buildSettingsUI(); initEditPalette(); renderBoard(); updateTurnIndicator(); updateEvalBar(0);
