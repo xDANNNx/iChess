@@ -222,8 +222,11 @@ body.nocoords .coord-file,body.nocoords .coord-rank{display:none}
 @keyframes checkShake { 0%,100% { transform:translateX(0); } 25% { transform:translateX(-1px); } 75% { transform:translateX(1px); } }
 .sq.sq-in-check .piece { filter:drop-shadow(0 0 5px #ff3939) drop-shadow(0 0 11px rgba(255,40,40,.55)); animation: kingThreat .72s ease-in-out infinite alternate; }
 @keyframes kingThreat { from { transform:scale(1); } to { transform:scale(1.045); } }
-.arrows line { transition:opacity .22s ease, stroke-width .22s ease; }
-.arrows line.arrow-enter { stroke-dasharray:8; stroke-dashoffset:8; animation: arrowDraw .32s ease-out forwards, arrowBreath 1.8s ease-in-out .32s infinite alternate; }
+.arrows line { transition:opacity .18s ease, stroke-width .18s ease; filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.62)); }
+.arrows line.arrow-enter { stroke-dasharray:12; stroke-dashoffset:12; animation: arrowDraw .28s ease-out forwards, arrowBreath 2.4s ease-in-out .28s 2 alternate; }
+.arrows line.arrow-best { filter:drop-shadow(0 1px 2px rgba(0,0,0,.72)) drop-shadow(0 0 2px rgba(255,215,0,.32)); }
+.arrows line.arrow-good { filter:drop-shadow(0 1px 2px rgba(0,0,0,.72)); }
+.arrows line.arrow-normal { filter:drop-shadow(0 1px 2px rgba(0,0,0,.72)); }
 @keyframes arrowDraw { to { stroke-dashoffset:0; } }
 @keyframes arrowBreath { from { opacity:.68; } to { opacity:1; } }
 .checkmate-overlay.show { animation:fadeIn .42s ease-out; }
@@ -285,13 +288,13 @@ button:active { transform:scale(.975); }
         <div class="board" id="board"></div>
         <svg class="arrows" viewBox="0 0 8 8">
           <defs>
-            <marker id="arrow-gold" markerWidth="3" markerHeight="3" refX="1.2" refY="1.5" orient="auto"><path d="M0 0 3 1.5 0 3z" fill="#FFD700"/></marker>
-            <marker id="arrow-blue" markerWidth="3" markerHeight="3" refX="1.2" refY="1.5" orient="auto"><path d="M0 0 3 1.5 0 3z" fill="#5b9bf0"/></marker>
-            <marker id="arrow-green" markerWidth="3" markerHeight="3" refX="1.2" refY="1.5" orient="auto"><path d="M0 0 3 1.5 0 3z" fill="#58b878"/></marker>
+            <marker id="arrow-gold" markerUnits="userSpaceOnUse" markerWidth=".34" markerHeight=".34" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#FFD700"/></marker>
+            <marker id="arrow-blue" markerUnits="userSpaceOnUse" markerWidth=".30" markerHeight=".30" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#5b9bf0"/></marker>
+            <marker id="arrow-green" markerUnits="userSpaceOnUse" markerWidth=".28" markerHeight=".28" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#58b878"/></marker>
           </defs>
-          <line id="arrow-alt" stroke="#5b9bf0" stroke-width=".16" stroke-linecap="round" marker-end="url(#arrow-blue)" opacity=".85" style="display:none"/>
-          <line id="arrow-best" stroke="#FFD700" stroke-width=".2" stroke-linecap="round" marker-end="url(#arrow-gold)" opacity=".95" style="display:none"/>
-          <line id="arrow-third" stroke="#58b878" stroke-width=".16" stroke-linecap="round" marker-end="url(#arrow-green)" opacity=".85" style="display:none"/>
+          <line id="arrow-alt" class="analysis-arrow arrow-good" stroke="#5b9bf0" stroke-width=".105" stroke-linecap="round" marker-end="url(#arrow-blue)" opacity=".92" style="display:none"/>
+          <line id="arrow-best" class="analysis-arrow arrow-best" stroke="#FFD700" stroke-width=".135" stroke-linecap="round" marker-end="url(#arrow-gold)" opacity=".98" style="display:none"/>
+          <line id="arrow-third" class="analysis-arrow arrow-normal" stroke="#58b878" stroke-width=".095" stroke-linecap="round" marker-end="url(#arrow-green)" opacity=".90" style="display:none"/>
         </svg>
         <div class="checkmate-overlay" id="checkmate-overlay">
           <i class="fa-solid fa-crown checkmate-icon"></i>
@@ -517,8 +520,10 @@ function initAudio() {
       const comp = audioCtx.createDynamicsCompressor();
       masterGain.connect(comp); comp.connect(audioCtx.destination);
     }
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    masterGain.gain.value = settings.vol;
+    if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+    const targetVolume = Math.max(0, Math.min(1, Number(settings.vol) || 0));
+    masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+    masterGain.gain.setTargetAtTime(targetVolume, audioCtx.currentTime, 0.025);
     return audioCtx;
   } catch (e) { return null; }
 }
@@ -529,23 +534,29 @@ function playNoise(ctx, time, duration, freq, q, vol) {
   for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 3);
   const src = ctx.createBufferSource(); src.buffer = buffer;
   const filter = ctx.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = freq; filter.Q.value = q;
-  const gain = ctx.createGain(); gain.gain.value = vol;
-  src.connect(filter); filter.connect(gain); gain.connect(masterGain); src.start(time);
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.0001, time);
+  gain.gain.linearRampToValueAtTime(Math.max(0.0001, vol), time + Math.min(0.012, duration * 0.25));
+  gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+  src.connect(filter); filter.connect(gain); gain.connect(masterGain); src.start(time); src.stop(time + duration + 0.01);
 }
 function playTone(ctx, time, duration, freqStart, freqEnd, vol, type = 'sine') {
   const osc = ctx.createOscillator(); const gain = ctx.createGain();
   osc.type = type; osc.frequency.setValueAtTime(freqStart, time);
   if (freqEnd && freqEnd !== freqStart) osc.frequency.exponentialRampToValueAtTime(freqEnd, time + duration);
-  gain.gain.setValueAtTime(vol, time); gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+  gain.gain.setValueAtTime(0.0001, time);
+  gain.gain.linearRampToValueAtTime(Math.max(0.0001, Math.min(0.8, vol)), time + Math.min(0.01, duration * 0.2));
+  gain.gain.exponentialRampToValueAtTime(0.0001, time + Math.max(0.025, duration));
   osc.connect(gain); gain.connect(masterGain); osc.start(time); osc.stop(time + duration + 0.02);
 }
 const PIECE_WEIGHT = { p: 1.1, n: 1, b: .97, r: .92, q: .88, k: .8 };
 
 function playSound(type, moveObj) {
-  triggerHaptic(type);
+  const hapticType = ({ move: 'move', capture: 'capture', check: 'check', castle: 'castle', promote: 'promote', illegal: 'illegal', end: 'end', draw: 'medium', start: 'light', undo: 'light', select: 'light', button: 'light', threat: 'check', ai: 'light' })[type] || 'light';
+  triggerHaptic(hapticType);
   if (!settings.sound || settings.vol <= 0) return;
   const ctx = initAudio(); if (!ctx) return;
-  const t = ctx.currentTime + 0.005;
+  const t = ctx.currentTime + 0.008;
   const weight = ((moveObj && PIECE_WEIGHT[moveObj.piece]) || 1) * (0.97 + Math.random() * 0.06);
   const playTap = (offset, vol) => { playNoise(ctx, t + offset, 0.07, 1700 * weight, 1.4, 0.9 * vol); playTone(ctx, t + offset, 0.09, 230 * weight, 95 * weight, 0.8 * vol); };
   switch (type) {
@@ -572,7 +583,13 @@ function playMoveSound(move) {
   playSound(move.promotion ? 'promote' : game.in_check() ? 'check' : move.captured ? 'capture' : /[kq]/.test(move.flags) ? 'castle' : 'move', move);
 }
 
-document.addEventListener('pointerdown', () => initAudio(), { once: true });
+function unlockChessAudio() {
+  if (!settings.sound) return;
+  const ctx = initAudio();
+  if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
+}
+document.addEventListener('pointerdown', unlockChessAudio, { once: true, passive: true });
+document.addEventListener('touchstart', unlockChessAudio, { once: true, passive: true });
 let toastTimeout;
 function showToast(msg) {
   triggerHaptic('light');
@@ -959,7 +976,7 @@ function buildSettingsUI() {
   document.documentElement.style.setProperty('--light', theme[1]);
   document.documentElement.style.setProperty('--dark', theme[2]);
 }
-function toggleSound() { triggerHaptic('light'); settings.sound = !settings.sound; saveSettings(); buildSettingsUI(); playSound('move'); }
+function toggleSound() { triggerHaptic('light'); settings.sound = !settings.sound; saveSettings(); buildSettingsUI(); if (settings.sound) playSound('button'); }
 function toggleHaptic() { settings.haptic = !settings.haptic; saveSettings(); buildSettingsUI(); if (settings.haptic) triggerHaptic('light'); }
 
 /* =========================================
@@ -1189,7 +1206,6 @@ async function analyzePosition() {
     updateEvalBar(rd.ev, rd.mate);
     generateCoachExplanation(startFen, rd.ev, rd.mate, rd.m1);
     drawBestMoveArrows(); if (H) showHuman(H); else showLines(rd);
-    playSound('check');
   } catch (e) { if (game.fen() === startFen) showToast(failMsg()); }
   finally { isAnalyzing = false; btn.disabled = false; spinner.remove(); $('btn-analyze-text').textContent = 'أفضل نقلة'; }
 }
@@ -1306,10 +1322,28 @@ function toggleAI() {
 }
 
 function drawArrowLine(id, uci) {
-  const el = $(id); if (!uci) { el.style.display = 'none'; return; }
-  const getPt = s => { let f = FILES.indexOf(s[0]), r = RANKS.indexOf(s[1]); if (isBoardFlipped) { f = 7 - f; r = 7 - r; } return [f + 0.5, r + 0.5]; };
-  const start = getPt(uci.slice(0, 2)); const end = getPt(uci.slice(2, 4));
-  el.setAttribute('x1', start[0]); el.setAttribute('y1', start[1]); el.setAttribute('x2', end[0]); el.setAttribute('y2', end[1]); el.style.display = 'block';
+  const el = $(id);
+  if (!el) return;
+  if (!uci || !/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(uci)) { el.style.display = 'none'; return; }
+  const getPt = square => {
+    let f = FILES.indexOf(square[0]), r = RANKS.indexOf(square[1]);
+    if (f < 0 || r < 0) return null;
+    if (isBoardFlipped) { f = 7 - f; r = 7 - r; }
+    return [f + 0.5, r + 0.5];
+  };
+  const start = getPt(uci.slice(0, 2)), end = getPt(uci.slice(2, 4));
+  if (!start || !end) { el.style.display = 'none'; return; }
+  const dx = end[0] - start[0], dy = end[1] - start[1];
+  const length = Math.hypot(dx, dy);
+  if (!length) { el.style.display = 'none'; return; }
+  // Keep the shaft clear of both pieces; the marker tip stops just short of the target center.
+  const ux = dx / length, uy = dy / length;
+  const fromPad = Math.min(.18, length * .16), toPad = Math.min(.31, length * .24);
+  el.setAttribute('x1', (start[0] + ux * fromPad).toFixed(3));
+  el.setAttribute('y1', (start[1] + uy * fromPad).toFixed(3));
+  el.setAttribute('x2', (end[0] - ux * toPad).toFixed(3));
+  el.setAttribute('y2', (end[1] - uy * toPad).toFixed(3));
+  el.style.display = 'block';
 }
 const _clearAnalysisTwoSided = clearAnalysis;
 clearAnalysis = function () {
@@ -1942,9 +1976,8 @@ updateTurnIndicator = function () {
   const terminal = game.game_over();
   const fen = terminal ? game.fen() : '';
   if (terminal && fen !== _lastTerminalFenFX) {
+    // executeMove -> playMoveSound owns the one-shot terminal audio/haptic.
     _lastTerminalFenFX = fen;
-    if (game.in_checkmate()) { triggerHaptic('end'); playSound('end'); }
-    else { triggerHaptic('medium'); playSound('draw'); }
   } else if (!terminal) _lastTerminalFenFX = '';
   $('turn-indicator').classList.toggle('turn-change-fx', settings.animations && !terminal);
 };
