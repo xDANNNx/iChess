@@ -3,12 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<script>
-// Keep every installation on the single canonical origin so auth cookies and API calls share one host.
-if (location.hostname !== 'ichess.pages.dev') {
-  location.replace('https://ichess.pages.dev' + location.pathname + location.search + location.hash);
-}
-</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Chess AI">
@@ -17,7 +11,7 @@ if (location.hostname !== 'ichess.pages.dev') {
 <title>شطرنج Chess AI — تحليل ذكي، العب ضد الذكاء الاصطناعي، ألغاز يومية</title>
 <meta name="description" content="موقع شطرنج مجاني بالعربية: تحليل فوري بمحرك قوي، أفضل النقلات والأسهم، شرح لغوي للنقلات، لعب ضد الذكاء الاصطناعي بستة مستويات، لغز يومي، وحفظ دراستك سحابياً.">
 <meta name="robots" content="index,follow,max-image-preview:large">
-<link rel="canonical" href="https://ichess.pages.dev/">
+<link rel="canonical" href="https://YOUR-DOMAIN.pages.dev/">
 <meta property="og:type" content="website"><meta property="og:locale" content="ar_AR"><meta property="og:title" content="Chess AI — شطرنج وتحليل ذكي">
 <meta property="og:description" content="حلّل نقلاتك، العب ضد الذكاء الاصطناعي، وحل اللغز اليومي. يعمل كتطبيق على الآيفون والآيباد."><meta property="og:image" content="https://YOUR-DOMAIN.pages.dev/icons/icon-512.png">
 <meta name="twitter:card" content="summary">
@@ -198,106 +192,6 @@ body.nocoords .coord-file,body.nocoords .coord-rank{display:none}
 .brand{white-space:nowrap}.h-btns{flex-shrink:0}
 @media (max-width:430px){.brand span{display:none}.icon-btn{width:34px!important}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-[hidden]{display:none!important}
-
-/* Polished board rendering and low-cost interaction motion */
-:root { --motion-fast: 130ms; --motion-board: 190ms; }
-html { -webkit-tap-highlight-color: transparent; }
-body { text-rendering: optimizeLegibility; }
-button, .icon-btn, .tool-btn, .sq { touch-action: manipulation; }
-button, .icon-btn, .tool-btn {
-  transition: transform var(--motion-fast) ease, filter var(--motion-fast) ease,
-              background-color var(--motion-fast) ease, border-color var(--motion-fast) ease;
-}
-button:active, .icon-btn:active, .tool-btn:active { transform: scale(.97); }
-button:focus-visible, .icon-btn:focus-visible, .tool-btn:focus-visible {
-  outline: 2px solid var(--brass); outline-offset: 2px;
-}
-.board-container {
-  border: 1px solid rgba(255,255,255,.12);
-  box-shadow: 0 12px 28px rgba(0,0,0,.30), 0 2px 7px rgba(0,0,0,.22);
-  isolation: isolate;
-}
-.sq { overflow: hidden; transition: background-color var(--motion-board) ease, box-shadow var(--motion-board) ease; }
-.sq:not(.selected):not(.last-move):hover { filter: brightness(1.055); }
-.sq.selected { box-shadow: inset 0 0 0 3px rgba(255,255,255,.82), inset 0 0 0 100px rgba(80,160,255,.24); }
-.sq.last-move { box-shadow: inset 0 0 0 100px rgba(255,214,10,.24); }
-.piece {
-  transform: translateZ(0) scale(1);
-  transform-origin: center;
-  backface-visibility: hidden;
-  animation: piece-arrive 150ms cubic-bezier(.2,.75,.25,1) both;
-}
-@keyframes piece-arrive {
-  0% { opacity: .72; transform: translateY(-2px) scale(.91); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
-}
-.move-dot { background: rgba(20,30,10,.34); box-shadow: 0 0 0 1px rgba(255,255,255,.16); transform: scale(.82); animation: target-in 120ms ease-out both; }
-@keyframes target-in { from { opacity: 0; transform: scale(.35); } to { opacity: 1; transform: scale(.82); } }
-.capture-ring { box-shadow: inset 0 0 0 1px rgba(255,255,255,.16); animation: target-in 120ms ease-out both; }
-.panel, .modal-content, .coach-box { -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
-@media (hover: none) { .sq:hover { filter: none; } }
-@media (max-width: 430px) {
-  .board-container { border-radius: 4px; }
-  .piece { width: 92%; height: 92%; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .piece, .move-dot, .capture-ring { animation: none !important; }
-  .sq, button, .icon-btn, .tool-btn { transition: none !important; }
-}
-
-
-/* Layering fix: keep board overlays inside their intended stacking layers. */
-.board-container { position: relative; isolation: isolate; }
-.board { position: relative; z-index: 1; }
-.sq { overflow: visible; isolation: auto; }
-.sq[class*="sq-"]::before,
-.sq[class*="sq-"]::after { content: none !important; display: none !important; }
-.sq .piece { position: relative; z-index: 3; pointer-events: none; }
-.sq .coord-file, .sq .coord-rank { z-index: 6; }
-.sq .move-dot, .sq .capture-ring { z-index: 5; }
-.sq .move-badge-overlay { z-index: 8; }
-.sq.sq-in-check { z-index: auto; }
-.sq.sq-in-check .piece { filter: drop-shadow(0 0 5px rgba(239,83,80,.7)); }
-.arrows { z-index: 7; }
-.checkmate-overlay { z-index: 30; }
-
-
-/* Gentle motion polish: lively, calm, and respectful of reduced-motion settings. */
-@keyframes board-breathe {
-  0%,100% { box-shadow: 0 10px 28px rgba(0,0,0,.18), 0 0 0 1px rgba(255,255,255,.035); }
-  50% { box-shadow: 0 12px 32px rgba(0,0,0,.2), 0 0 18px rgba(116,169,126,.09), 0 0 0 1px rgba(255,255,255,.07); }
-}
-.board-container { animation: board-breathe 7s ease-in-out infinite; }
-@keyframes panel-enter {
-  from { opacity: 0; transform: translateY(7px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.panel, .coach-box { animation: panel-enter 360ms cubic-bezier(.2,.7,.2,1) both; }
-button, .icon-btn, .tool-btn {
-  transition: transform 160ms cubic-bezier(.2,.7,.2,1), box-shadow 180ms ease, filter 180ms ease, background-color 180ms ease;
-}
-button:hover, .icon-btn:hover, .tool-btn:hover { filter: brightness(1.06); }
-button:active, .icon-btn:active, .tool-btn:active { transform: scale(.965); }
-.sq .piece { transition: filter 180ms ease; }
-.sq:hover .piece { filter: drop-shadow(0 2px 2px rgba(0,0,0,.16)); }
-.sq.sq-selected { animation: selected-breathe 1.5s ease-in-out infinite; }
-@keyframes selected-breathe {
-  0%,100% { box-shadow: inset 0 0 0 2px rgba(255,255,255,.18); }
-  50% { box-shadow: inset 0 0 0 3px rgba(255,255,255,.38); }
-}
-/* Toasts must remain hidden unless JavaScript explicitly adds .show. */
-.toast { animation: none; }
-.toast.show { animation: toast-enter 240ms cubic-bezier(.18,.8,.25,1) both; }
-@keyframes toast-enter {
-  from { opacity: 0; transform: translate(-50%, 8px) scale(.985); }
-  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .board-container, .panel, .coach-box, .sq.sq-selected, .toast, .toast-message { animation: none !important; }
-  button, .icon-btn, .tool-btn, .sq .piece { transition: none !important; }
-}
-
 </style>
 </head>
 <body>
@@ -320,7 +214,6 @@ button:active, .icon-btn:active, .tool-btn:active { transform: scale(.965); }
         <button id="btn-black" onclick="setPlayerColor('b')">أسود</button>
       </div>
       <div class="h-btns">
-<button class="icon-btn" id="account-open-btn" onclick="openAccountModal()" aria-label="الحساب"><i class="fa-solid fa-user"></i></button>
 <button class="icon-btn" onclick="openModal('modes-modal')" aria-label="الأنماط"><i class="fa-solid fa-gamepad"></i></button>
         <button class="icon-btn" onclick="openModal('io-modal')" aria-label="استيراد"><i class="fa-solid fa-file-import"></i></button>
         <button class="icon-btn" id="btn-edit" onclick="toggleEditMode()" aria-label="تعديل"><i class="fa-solid fa-wrench"></i></button>
@@ -414,28 +307,6 @@ button:active, .icon-btn:active, .tool-btn:active { transform: scale(.965); }
       <button class="list-btn" id="btn-toggle-ai" onclick="toggleAI()"></button>
     </div>
     <button class="close-btn" onclick="closeModal('settings-modal')">حفظ وإغلاق</button>
-  </div>
-</div>
-
-<div class="modal" id="account-modal" onclick="if(event.target===this)closeModal('account-modal')">
-  <div class="card">
-    <h3><i class="fa-solid fa-user-shield"></i> حساب iChess</h3>
-    <div id="account-status" style="color:var(--muted);font-size:13px;margin-bottom:12px">سجّل الدخول لمزامنة إعداداتك ومبارياتك بين أجهزتك.</div>
-    <div id="account-auth-fields">
-      <h4>البريد الإلكتروني</h4><input id="account-email" type="email" autocomplete="email" placeholder="name@example.com" style="width:100%;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);margin-bottom:8px">
-      <h4>كلمة المرور (10 أحرف على الأقل)</h4><input id="account-password" type="password" autocomplete="current-password" placeholder="كلمة المرور" style="width:100%;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);margin-bottom:10px">
-      <input id="account-name" type="text" autocomplete="name" placeholder="الاسم (للتسجيل فقط)" style="width:100%;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);margin-bottom:10px">
-      <button class="list-btn" onclick="accountSubmit('login')">تسجيل الدخول</button>
-      <button class="list-btn" onclick="accountSubmit('register')">إنشاء حساب جديد</button>
-      <button class="list-btn" onclick="loginWithGoogle(this)">المتابعة باستخدام Google</button>
-    </div>
-    <div id="account-signed-in" hidden>
-      <div id="account-user-label" style="font-weight:700;margin:12px 0"></div>
-      <div id="account-stats" style="font-size:13px;color:var(--muted);margin:8px 0 14px"></div>
-      <button class="list-btn" onclick="accountSync(true)">☁️ مزامنة بيانات الحساب الآن</button>
-      <button class="list-btn" onclick="accountLogout()">تسجيل الخروج</button>
-    </div>
-    <button class="close-btn" onclick="closeModal('account-modal')">إغلاق</button>
   </div>
 </div>
 
@@ -533,7 +404,7 @@ const STYLES = {
 };
 
 let settings = {
-  level: 18, theme: 0, sound: true, vol: 0.7, haptic: true, phase: 'auto', style: 'off', ph: { o: true, m: true, e: true }, aiEnabled: false
+  level: 18, theme: 0, sound: true, vol: 0.7, haptic: true, phase: 'auto', style: 'off', ph: { o: true, m: true, e: true }, aiEnabled: false, humanMoves: true
 };
 
 try {
@@ -541,7 +412,7 @@ try {
   settings = { ...settings, ...saved, ph: { ...settings.ph, ...(saved.ph || {}) } };
 } catch (e) { console.warn("Could not load settings"); }
 
-const saveSettings = () => { try { localStorage.setItem('chess_ai_settings', JSON.stringify(settings)); localStorage.setItem('chess_ai_settings_updated', String(Date.now())); } catch (e) {} if (typeof scheduleAccountSync === 'function') scheduleAccountSync(); };
+const saveSettings = () => { try { localStorage.setItem('chess_ai_settings', JSON.stringify(settings)); } catch (e) {} };
 
 let selectedSquare = null;
 let isBoardFlipped = false;
@@ -595,78 +466,50 @@ function initAudio() {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       masterGain = audioCtx.createGain();
       const comp = audioCtx.createDynamicsCompressor();
-      comp.threshold.value = -20; comp.knee.value = 18; comp.ratio.value = 4;
-      comp.attack.value = 0.004; comp.release.value = 0.18;
       masterGain.connect(comp); comp.connect(audioCtx.destination);
     }
     if (audioCtx.state === 'suspended') audioCtx.resume();
-    masterGain.gain.setTargetAtTime(Math.max(0, Math.min(1, Number(settings.vol) || 0)) * 0.62, audioCtx.currentTime, 0.025);
+    masterGain.gain.value = settings.vol;
     return audioCtx;
   } catch (e) { return null; }
 }
 function playNoise(ctx, time, duration, freq, q, vol) {
-  const size = Math.max(1, Math.floor(ctx.sampleRate * duration));
-  const buffer = ctx.createBuffer(1, size, ctx.sampleRate);
+  const bufferSize = Math.floor(ctx.sampleRate * duration);
+  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
   const data = buffer.getChannelData(0);
-  for (let i = 0; i < size; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / size, 4);
+  for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 3);
   const src = ctx.createBufferSource(); src.buffer = buffer;
-  const filter = ctx.createBiquadFilter(); filter.type = 'bandpass';
-  filter.frequency.setValueAtTime(freq, time); filter.Q.value = q;
-  const gain = ctx.createGain();
-  gain.gain.setValueAtTime(0.0001, time);
-  gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol), time + Math.min(0.012, duration * 0.35));
-  gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
-  src.connect(filter); filter.connect(gain); gain.connect(masterGain);
-  src.start(time); src.stop(time + duration + 0.01);
+  const filter = ctx.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = freq; filter.Q.value = q;
+  const gain = ctx.createGain(); gain.gain.value = vol;
+  src.connect(filter); filter.connect(gain); gain.connect(masterGain); src.start(time);
 }
 function playTone(ctx, time, duration, freqStart, freqEnd, vol, type = 'sine') {
-  const osc = ctx.createOscillator(), gain = ctx.createGain();
-  osc.type = type; osc.frequency.setValueAtTime(Math.max(1, freqStart), time);
-  if (freqEnd && freqEnd !== freqStart) osc.frequency.exponentialRampToValueAtTime(Math.max(1, freqEnd), time + duration);
-  gain.gain.setValueAtTime(0.0001, time);
-  gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol), time + Math.min(0.009, duration * 0.3));
-  gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+  const osc = ctx.createOscillator(); const gain = ctx.createGain();
+  osc.type = type; osc.frequency.setValueAtTime(freqStart, time);
+  if (freqEnd && freqEnd !== freqStart) osc.frequency.exponentialRampToValueAtTime(freqEnd, time + duration);
+  gain.gain.setValueAtTime(vol, time); gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
   osc.connect(gain); gain.connect(masterGain); osc.start(time); osc.stop(time + duration + 0.02);
 }
-const PIECE_WEIGHT = { p: 1.08, n: 1, b: .98, r: .94, q: .9, k: .86 };
+const PIECE_WEIGHT = { p: 1.1, n: 1, b: .97, r: .92, q: .88, k: .8 };
+
 function playSound(type, moveObj) {
   triggerHaptic(type);
   if (!settings.sound || settings.vol <= 0) return;
   const ctx = initAudio(); if (!ctx) return;
-  const t = ctx.currentTime + 0.012;
-  const w = (moveObj && PIECE_WEIGHT[moveObj.piece]) || 1;
-  const note = (dt, d, a, b, v, wave = 'sine') => playTone(ctx, t + dt, d, a * w, b * w, v, wave);
-  const click = (dt = 0, strength = 1) => {
-    playNoise(ctx, t + dt, 0.045, 2100 * w, 1.8, 0.12 * strength);
-    note(dt, 0.075, 420, 190, 0.16 * strength, 'triangle');
-  };
+  const t = ctx.currentTime + 0.005;
+  const weight = ((moveObj && PIECE_WEIGHT[moveObj.piece]) || 1) * (0.97 + Math.random() * 0.06);
+  const playTap = (offset, vol) => { playNoise(ctx, t + offset, 0.07, 1700 * weight, 1.4, 0.9 * vol); playTone(ctx, t + offset, 0.09, 230 * weight, 95 * weight, 0.8 * vol); };
   switch (type) {
-    case 'move':
-      click(0, 0.9); note(0.008, 0.055, 680, 520, 0.045, 'sine'); break;
-    case 'capture':
-      playNoise(ctx, t, 0.085, 900 * w, 1.1, 0.2);
-      note(0, 0.12, 205, 72, 0.22, 'triangle'); click(0.035, 0.65); break;
-    case 'check':
-      click(0, 0.9); note(0.035, 0.16, 740, 740, 0.11, 'triangle');
-      note(0.09, 0.2, 988, 988, 0.09, 'sine'); break;
-    case 'castle':
-      click(0, 0.75); click(0.105, 0.75); note(0.025, 0.15, 460, 700, 0.055, 'sine'); break;
-    case 'promote':
-      click(0, 0.8);
-      [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => note(0.045 + i * 0.065, 0.19, f, f * 1.008, 0.105, 'sine'));
-      break;
-    case 'end':
-      [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => note(i * 0.13, 0.32, f, f * 0.995, 0.105, 'triangle'));
-      break;
-    case 'draw':
-      [523.25, 466.16, 392].forEach((f, i) => note(i * 0.17, 0.25, f, f * 0.995, 0.09, 'sine'));
-      break;
-    case 'illegal':
-      note(0, 0.075, 185, 145, 0.13, 'triangle'); note(0.095, 0.075, 145, 115, 0.11, 'triangle'); break;
-    case 'ui':
-      note(0, 0.045, 620, 760, 0.055, 'sine'); break;
+    case 'move': playTap(0, 1); break;
+    case 'capture': playNoise(ctx, t, 0.12, 1100 * weight, 0.9, 1.2); playTone(ctx, t, 0.14, 170 * weight, 60 * weight, 1); playTap(0.045, 0.9); break;
+    case 'check': playTap(0, 1); playTone(ctx, t + 0.04, 0.22, 988, 988, 0.25, 'triangle'); playTone(ctx, t + 0.04, 0.22, 1318, 1318, 0.12, 'triangle'); break;
+    case 'castle': playTap(0, 1); playTap(0.1, 0.9); break;
+    case 'promote': playTap(0, 0.8); [523, 659, 784, 1047].forEach((f, i) => playTone(ctx, t + 0.08 + i * 0.07, 0.25, f, f, 0.22, 'triangle')); break;
+    case 'end': playTap(0, 1); [392, 330, 262].forEach((f, i) => { playTone(ctx, t + 0.15 + i * 0.2, 0.9, f, f * 0.99, 0.3); playTone(ctx, t + 0.15 + i * 0.2, 0.6, f * 2, f * 2, 0.1); }); break;
+    case 'illegal': playTone(ctx, t, 0.09, 130, 110, 0.25, 'square'); playTone(ctx, t + 0.11, 0.09, 130, 110, 0.25, 'square'); break;
   }
 }
+
 function playMoveSound(move) {
   if (game.in_checkmate()) return playSound('end', move);
   if (game.in_stalemate() || game.in_draw()) return playSound('draw', move);
@@ -748,10 +591,7 @@ function renderBoard() {
       if (mark) { const d = document.createElement('i'); d.className = mark === 'c' ? 'capture-ring' : 'move-dot'; el.appendChild(d); }
     }
     updateMaterialBar();
-  } catch (e) {
-    // Preserve the last valid board if a transient render error occurs.
-    console.error('[iChess] Board render failed; preserving current board.', e);
-  }
+  } catch (e) { console.error(e); $('board').innerHTML = ''; }
 }
 
 function updateMaterialBar() {
@@ -854,49 +694,40 @@ function handleSquareTap(square) {
   }
 }
 
-function animatePieceTravel(to, startRect) {
-  if (!startRect || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const endEl = document.querySelector(`[data-square="${to}"] .piece`);
-  if (!endEl || typeof endEl.animate !== 'function') return;
-  const endRect = endEl.getBoundingClientRect();
-  const dx = startRect.left - endRect.left, dy = startRect.top - endRect.top;
-  if (!Number.isFinite(dx) || !Number.isFinite(dy) || (Math.abs(dx) < 1 && Math.abs(dy) < 1)) return;
-  endEl.style.animation = 'none';
-  endEl.animate([
-    { transform: `translate(${dx}px, ${dy}px) scale(.96)` },
-    { transform: 'translate(0, 0) scale(1)' }
-  ], { duration: 230, easing: 'cubic-bezier(.2,.75,.25,1)', fill: 'both' });
-}
-
 function executeMove(from, to, promo) {
   const startEl = document.querySelector(`[data-square="${from}"] .piece`);
   const startRect = startEl ? startEl.getBoundingClientRect() : null;
-  const movingPiece = game.get(from);
   const move = game.move({ from, to, promotion: promo || 'q' });
   if (!move) return;
-  let rookStart = null, rookTo = null;
-  if (movingPiece && movingPiece.type === 'k' && move.flags && (move.flags.includes('k') || move.flags.includes('q'))) {
-    const rank = from[1], kingSide = move.flags.includes('k');
-    const rookFrom = (kingSide ? 'h' : 'a') + rank;
-    rookTo = (kingSide ? 'f' : 'd') + rank;
-    const rookEl = document.querySelector(`[data-square="${rookFrom}"] .piece`);
-    rookStart = rookEl ? rookEl.getBoundingClientRect() : null;
-  }
   playMoveSound(move);
   lastMove = { from, to };
   selectedSquare = null;
   clearAnalysis();
   let materialScore = 0;
   game.board().forEach(row => row.forEach(p => { if (p) materialScore += (p.color === 'w' ? 1 : -1) * (PIECE_VALUES[p.type] || 0); }));
-  const localEval = materialScore / 10;
+  let localEval = materialScore / 10;
   lastMoveClassification = null;
   renderBoard();
   updateTurnIndicator();
   updateEvalBar(localEval, null);
-  animatePieceTravel(to, startRect);
-  if (rookStart && rookTo) animatePieceTravel(rookTo, rookStart);
   if (puzzle) puzzleCheck(move); else autoEvaluate(true, move);
-  if (settings.aiEnabled && !isEditMode && !puzzle) setTimeout(maybeAIPlay, 600);
+  if (startRect) {
+    const endEl = document.querySelector(`[data-square="${to}"] .piece`);
+    if (endEl) {
+      const endRect = endEl.getBoundingClientRect();
+      const dx = startRect.left - endRect.left;
+      const dy = startRect.top - endRect.top;
+      endEl.style.transition = 'none'; endEl.style.transform = `translate(${dx}px, ${dy}px)`;
+      void endEl.offsetWidth;
+      endEl.style.transition = 'transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)';
+      endEl.style.transform = 'translate(0, 0)';
+      setTimeout(() => { if (endEl) endEl.style.transition = ''; }, 200);
+    }
+  }
+  // ← تشغيل الذكاء الاصطناعي بعد نقلة اللاعب
+  if (settings.aiEnabled && !isEditMode && !puzzle) {
+    setTimeout(maybeAIPlay, 600);
+  }
 }
 
 function askPromotion(color) {
@@ -1270,6 +1101,7 @@ async function runAutoEval(moveObj, attempt) {
     generateCoachExplanation(startFen, r.evalScore, r.mateIn, H ? H.m1 : r.bestMoveUci);
     bestMoveData = { m1: H ? H.m1 : r.bestMoveUci, m2: H ? H.m2 : null, ev: r.evalScore, mate: r.mateIn, src: cached ? 'ذاكرة' : 'AI تلقائي', lines: H ? [] : r.lines };
     drawBestMoveArrows();
+    if (H) showHuman(H, startFen);
     const be = moveObj && bc && learnedDB[bc];
     if (be) { lastMoveClassification = classifyMove(be.evalScore, r.evalScore, moveObj, be.bestMoveUci, bn); renderBoard(); }
     previousEval = r.evalScore;
@@ -1301,7 +1133,7 @@ async function analyzePosition() {
     bestMoveData = rd;
     updateEvalBar(rd.ev, rd.mate);
     generateCoachExplanation(startFen, rd.ev, rd.mate, rd.m1);
-    drawBestMoveArrows(); if (H) showHuman(H); else showLines(rd);
+    drawBestMoveArrows(); if (H) showHuman(H, startFen); else showLines(rd);
     playSound('check');
   } catch (e) { if (game.fen() === startFen) showToast(failMsg()); }
   finally { isAnalyzing = false; btn.disabled = false; spinner.remove(); $('btn-analyze-text').textContent = 'أفضل نقلة'; }
@@ -1356,10 +1188,12 @@ function humanize(fen, r) {
     return { list, m1: list[0].uci, m2: list[1] ? list[1].uci : null };
   } catch (e) { return null; }
 }
-function showHuman(H) {
+function showHuman(H, fen = game.fen()) {
+  if (!H || !H.list || !H.list.length) return;
   humanList = H.list;
   const lv = (LEVELS.find(l => l[0] === settings.level) || LEVELS[LEVELS.length - 1])[1];
-  $('coach-box').insertAdjacentHTML('beforeend', `<br>🧑 <strong>نقلات بشرية محتملة (${lv}):</strong> ` + H.list.map((x, i) => `<span class="ln" onclick="pickHuman(${i})"><b>${Math.round(x.p * 100)}%</b> ${x.san}</span>`).join(''));
+  const side = fen.split(' ')[1] === playerColor ? 'لك (المستخدم)' : 'للخصم';
+  $('coach-box').insertAdjacentHTML('beforeend', `<br>🧑 <strong>اقتراحات بشرية ${side} — ${lv}:</strong> ` + H.list.map((x, i) => `<span class="ln" onclick="pickHuman(${i})"><b>${Math.round(x.p * 100)}%</b> ${x.san}</span>`).join(''));
 }
 function pickHuman(i) { const x = humanList[i]; if (!x || !bestMoveData) return; triggerHaptic('light'); bestMoveData.m1 = x.uci; bestMoveData.m2 = null; drawBestMoveArrows(); }
 function humanDelay(fen, mv) {
@@ -1368,13 +1202,35 @@ function humanDelay(fen, mv) {
   if (m && m.captured) d *= .75; if (n <= 2) d *= .5; if ((parseInt(fen.split(' ')[5]) || 1) <= 6) d *= .7;
   return d * (settings.level <= 2 ? .75 : settings.level >= 12 ? 1.25 : 1);
 }
+function toggleHumanMoves() {
+  triggerHaptic('light');
+  settings.humanMoves = !settings.humanMoves;
+  saveSettings();
+  buildSettingsUI();
+  aiThinking = false;
+  showToast(settings.humanMoves
+    ? '🎭 محاكاة النقلات البشرية مفعّلة'
+    : '♟️ المحاكاة متوقفة — أفضل نقلات المحرك');
+  if (settings.aiEnabled) setTimeout(maybeAIPlay, 250);
+}
+
 async function getAIMove(fen, level) {
   lastAiPick = null;
-  const bk = londonMove(fen); if (bk) return bk;
+  // Human mode may use the existing opening repertoire; engine mode never overrides its best move.
+  if (settings.humanMoves) {
+    const bk = londonMove(fen);
+    if (bk && legalUci(fen, bk.from + bk.to + (bk.promotion || ''))) return bk;
+  }
   const p = fen.split(' '); p[2] = '-'; p[3] = '-';
-  let r = null; try { r = await getAnalysis(p.join(' '), level >= 18 ? 16 : 12); } catch (e) { console.warn('AI analysis:', e.message); }
+  let r = null;
+  try { r = await getAnalysis(p.join(' '), level >= 18 ? 16 : 12); }
+  catch (e) { console.warn('AI analysis:', e.message); }
   if (!r || !legalUci(fen, r.bestMoveUci)) return null;
   const u = r.bestMoveUci;
+  if (!settings.humanMoves) {
+    return { from: u.slice(0, 2), to: u.slice(2, 4), promotion: u[4] || 'q' };
+  }
+  // Sample from a level-conditioned human-style distribution; fall back to the legal engine move.
   return humanMove(fen, level, r) || { from: u.slice(0, 2), to: u.slice(2, 4), promotion: u[4] || 'q' };
 }
 
@@ -1393,7 +1249,7 @@ async function maybeAIPlay() {
     await new Promise(r => setTimeout(r, 200 + Math.random() * 300));
     if (game.fen() !== expectedFen) return;
     const move = await getAIMove(game.fen(), settings.level);
-    if (move) { const w = humanDelay(expectedFen, move) - (Date.now() - t0); if (w > 0) await new Promise(r => setTimeout(r, w)); }
+    if (move) { const wait = settings.humanMoves ? humanDelay(expectedFen, move) : (350 + Math.random() * 450); const w = wait - (Date.now() - t0); if (w > 0) await new Promise(r => setTimeout(r, w)); }
     if (move && game.fen() === expectedFen) {
       aiRetry = 0; executeMove(move.from, move.to, move.promotion);
     } else if (!move && game.fen() === expectedFen && aiRetry++ < 6) { showToast('⏳ الخدمة مشغولة — الخصم يعيد المحاولة'); setTimeout(maybeAIPlay, 5000); }
@@ -1445,7 +1301,7 @@ const _bsu = buildSettingsUI;
 buildSettingsUI = function () {
   _bsu();
   const names = { auto: 'تلقائي', dark: 'داكن', light: 'فاتح' };
-  $('settings-extra').innerHTML = `<button class="list-btn" onclick="cycleUI()">مظهر التطبيق: ${names[settings.ui]}<span>اضغط للتبديل</span></button><button class="list-btn" onclick="settings.coords=!settings.coords;saveSettings();buildSettingsUI()">إحداثيات الرقعة: ${settings.coords ? 'ظاهرة' : 'مخفية'}<span>a-h / 1-8</span></button><h4>الافتتاح</h4><button class="list-btn" onclick="settings.london=!settings.london;saveSettings();buildSettingsUI()">افتتاحية لندن: ${settings.london ? 'مفعّلة' : 'متوقفة'}<span>للخصم والتلميحات</span></button><button class="list-btn" onclick="settings.humanHints=!settings.humanHints;saveSettings();buildSettingsUI();clearAnalysis()">🧑 اقتراحات بشرية حسب المستوى: ${settings.humanHints ? 'مفعّلة' : 'متوقفة'}<span>نقلات يلعبها إنسان بمستواك</span></button><h4>المزامنة السحابية</h4><button class="list-btn" onclick="cloudSync(true)">☁️ مزامنة الآن<span>${memN} وضعية محفوظة</span></button><button class="list-btn" onclick="showSyncKey()">🔑 مفتاح المزامنة<span>لنقل بياناتك لجهاز آخر</span></button><h4>ذاكرة الوضعيات</h4><button class="list-btn" onclick="exportMemory()">💾 تصدير الذاكرة<span>نسخة احتياطية</span></button><button class="list-btn" onclick="$('mem-file').click()">📥 استيراد الذاكرة<span>من ملف</span></button><input type="file" id="mem-file" accept=".json" hidden onchange="importMemory(this)">`;
+  $('settings-extra').innerHTML = `<button class="list-btn" onclick="cycleUI()">مظهر التطبيق: ${names[settings.ui]}<span>اضغط للتبديل</span></button><button class="list-btn" onclick="settings.coords=!settings.coords;saveSettings();buildSettingsUI()">إحداثيات الرقعة: ${settings.coords ? 'ظاهرة' : 'مخفية'}<span>a-h / 1-8</span></button><h4>الافتتاح</h4><button class="list-btn" onclick="settings.london=!settings.london;saveSettings();buildSettingsUI()">افتتاحية لندن: ${settings.london ? 'مفعّلة' : 'متوقفة'}<span>للخصم والتلميحات</span></button><button class="list-btn" onclick="settings.humanHints=!settings.humanHints;saveSettings();buildSettingsUI();clearAnalysis()">🧑 اقتراحات بشرية للطرفين: ${settings.humanHints ? 'مفعّلة' : 'متوقفة'}<span>تظهر لصاحب الدور: لك أو للخصم، مع نسب احتمالية</span></button><button class="list-btn ${settings.humanMoves ? 'active' : ''}" onclick="toggleHumanMoves()">🎭 محاكاة نقلات الخصم: ${settings.humanMoves ? 'مفعّلة' : 'متوقفة'}<span>${settings.humanMoves ? 'الخصم يلعب بأسلوب بشري حسب المستوى' : 'الخصم يختار أفضل نقلة من المحرك'}</span></button><h4>المزامنة السحابية</h4><button class="list-btn" onclick="cloudSync(true)">☁️ مزامنة الآن<span>${memN} وضعية محفوظة</span></button><button class="list-btn" onclick="showSyncKey()">🔑 مفتاح المزامنة<span>لنقل بياناتك لجهاز آخر</span></button><h4>ذاكرة الوضعيات</h4><button class="list-btn" onclick="exportMemory()">💾 تصدير الذاكرة<span>نسخة احتياطية</span></button><button class="list-btn" onclick="$('mem-file').click()">📥 استيراد الذاكرة<span>من ملف</span></button><input type="file" id="mem-file" accept=".json" hidden onchange="importMemory(this)">`;
   applyUI();
 };
 function cycleUI() { settings.ui = { auto: 'dark', dark: 'light', light: 'auto' }[settings.ui] || 'auto'; saveSettings(); buildSettingsUI(); }
@@ -1560,11 +1416,11 @@ function puzzleDone() { puzzle = null; playSound('promote'); $('coach-box').inne
 
 /* Library (local + cloud) */
 const getGames = () => { try { return JSON.parse(localStorage.getItem('chess_games') || '[]'); } catch (e) { return []; } };
-const putGames = g => { try { localStorage.setItem('chess_games', JSON.stringify(g.slice(0, 200))); localStorage.setItem('chess_games_t', Date.now()); } catch (e) {} if (typeof scheduleAccountSync === 'function') scheduleAccountSync(); };
+const putGames = g => { try { localStorage.setItem('chess_games', JSON.stringify(g.slice(0, 200))); localStorage.setItem('chess_games_t', Date.now()); } catch (e) {} };
 function saveGame(silent) {
   const pgn = game.pgn(); if (!game.history().length) return silent === true || showToast('لا توجد نقلات لحفظها');
   const g = getGames(); if (g.some(x => x.pgn === pgn)) return silent === true || showToast('محفوظة مسبقاً');
-  g.unshift({ id: Date.now().toString(36), pgn, date: Date.now(), n: game.history().length, r: game.in_checkmate() ? (game.turn() === 'w' ? '0-1' : '1-0') : (game.in_draw() ? '1/2-1/2' : '') });
+  g.unshift({ id: Date.now().toString(36), pgn, date: Date.now(), n: game.history().length, r: game.in_checkmate() ? (game.turn() === 'w' ? '0-1' : '1-0') : '' });
   putGames(g); if (silent !== true) { showToast('💾 تم الحفظ'); renderLibrary(); }
 }
 function openLibrary() { renderLibrary(); openModal('lib-modal'); }
@@ -1677,86 +1533,6 @@ setInterval(() => {
 }, 4000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { aiThinking = false; if (settings.aiEnabled) setTimeout(maybeAIPlay, 300); } });
 
-/* ===== Account system: Cloudflare Pages + D1 ===== */
-let accountUser = null, accountSyncTimer = null, accountSyncBusy = false;
-async function loginWithGoogle(button) {
-  if (button?.disabled) return;
-  if (button) { button.disabled = true; button.textContent = 'جارٍ الاتصال بـ Google…'; }
-  // The installed app is hosted on workers.dev, while the working OAuth
-  // endpoints and cookies belong to ichess.pages.dev. Navigate top-level
-  // instead of fetch() to avoid cross-origin CORS failures in iOS standalone mode.
-  window.location.assign('/api/auth/google');
-}
-function openAccountModal() { openModal('account-modal'); refreshAccount(); }
-function accountMessage(message) { const el = $('account-status'); if (el) el.textContent = message; }
-function renderAccount(user, stats) {
-  accountUser = user || null;
-  $('account-auth-fields').hidden = !!user;
-  $('account-signed-in').hidden = !user;
-  $('account-open-btn').innerHTML = user ? '<i class="fa-solid fa-user-check"></i>' : '<i class="fa-solid fa-user"></i>';
-  if (user) {
-    $('account-user-label').textContent = (user.display_name || user.email) + ' · ' + user.email;
-    $('account-stats').textContent = stats ? `المباريات المكتملة: ${stats.completed_games || 0} · فوز: ${stats.wins || 0} · خسارة: ${stats.losses || 0} · تعادل: ${stats.draws || 0}` : 'الحساب متصل.';
-    accountMessage('تم تسجيل الدخول. ستتم مزامنة بياناتك مع هذا الحساب.');
-  } else accountMessage('سجّل الدخول لمزامنة إعداداتك ومبارياتك بين أجهزتك.');
-}
-async function refreshAccount() {
-  try { const r = await fetch('/api/auth/me', { credentials: 'same-origin', cache: 'no-store' }); const d = await r.json(); renderAccount(d.user); if (d.user) { await accountSync(false); } }
-  catch { accountMessage('تعذّر الاتصال بخدمة الحسابات.'); }
-}
-async function accountSubmit(mode) {
-  const email = $('account-email').value.trim(), password = $('account-password').value, name = $('account-name').value.trim();
-  accountMessage(mode === 'register' ? 'جارٍ إنشاء الحساب…' : 'جارٍ تسجيل الدخول…');
-  try {
-    const r = await fetch('/api/auth/' + mode, { method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email,password,name}) });
-    const d = await r.json(); if (!r.ok) throw new Error(d.error || 'تعذّر إكمال العملية.');
-    renderAccount(d.user); await syncAccountData(true); showToast(mode === 'register' ? 'تم إنشاء الحساب' : 'تم تسجيل الدخول');
-  } catch (e) { accountMessage(e.message || 'حدث خطأ.'); }
-}
-async function accountLogout() {
-  try { await fetch('/api/auth/logout', { method:'POST', credentials:'same-origin' }); } catch {}
-  accountUser = null; renderAccount(null); showToast('تم تسجيل الخروج');
-}
-function scheduleAccountSync() { if (!accountUser || accountSyncBusy) return; clearTimeout(accountSyncTimer); accountSyncTimer = setTimeout(() => accountSync(false), 120000); }
-function localAccountPayload() {
-  return { settings, games:getGames(), progress:{ learnedPositions:Object.keys(learnedDB).length, settingsUpdatedAt:+(localStorage.getItem('chess_ai_settings_updated')||0) }, learnedDB };
-}
-async function syncAccountData(initialUpload) {
-  if (!accountUser || accountSyncBusy) return;
-  accountSyncBusy = true;
-  try {
-    const get = await fetch('/api/account/data', { credentials:'same-origin', cache:'no-store' });
-    if (get.status === 401) { accountUser = null; renderAccount(null); return; }
-    if (!get.ok) throw new Error('load');
-    const remote = await get.json();
-    const hasRemote = Object.keys(remote.settings || {}).length || (remote.games || []).length || Object.keys(remote.learnedDB || {}).length;
-    if (initialUpload && !hasRemote) {
-      const put = await fetch('/api/account/data', { method:'PUT', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body:JSON.stringify(localAccountPayload()) });
-      if (!put.ok) throw new Error('save');
-    } else {
-      const localSettingsUpdated = +(localStorage.getItem('chess_ai_settings_updated') || 0);
-      const remoteSettingsUpdated = +(remote.progress?.settingsUpdatedAt || 0);
-      if (remote.settings && Object.keys(remote.settings).length && remoteSettingsUpdated > localSettingsUpdated) {
-        settings = { ...settings, ...remote.settings, ph:{ ...(settings.ph || {}), ...((remote.settings || {}).ph || {}) } };
-        try { localStorage.setItem('chess_ai_settings', JSON.stringify(settings)); localStorage.setItem('chess_ai_settings_updated', String(remoteSettingsUpdated)); } catch {}
-        buildSettingsUI();
-      }
-      const localGames = getGames(), gameMap = new Map();
-      for (const g of [...(remote.games || []), ...localGames]) if (g && g.id) { const old = gameMap.get(g.id); if (!old || (+g.date || 0) > (+old.date || 0)) gameMap.set(g.id, g); }
-      putGames([...gameMap.values()].sort((a,b)=>(+b.date||0)-(+a.date||0)).slice(0,200));
-      for (const k in (remote.learnedDB || {})) if (!(k in learnedDB)) { learnedDB[k] = remote.learnedDB[k]; dirty[k] = remote.learnedDB[k]; }
-      memN = Object.keys(learnedDB).filter(k => !isAi(k)).length; updateLearnedCountUI(); flushMem();
-      const put = await fetch('/api/account/data', { method:'PUT', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body:JSON.stringify(localAccountPayload()) });
-      if (!put.ok) throw new Error('save');
-    }
-    const fresh = await fetch('/api/account/data', { credentials:'same-origin', cache:'no-store' });
-    if (fresh.ok) { const data = await fresh.json(); renderAccount(accountUser, data.stats); }
-    accountMessage('تمت مزامنة الإعدادات والمباريات والتقدم.');
-  } catch { accountMessage('تعذّرت المزامنة حالياً. جرّب مرة أخرى عند توفر الاتصال.'); }
-  finally { accountSyncBusy = false; }
-}
-async function accountSync(manual) { if (!accountUser) return; await syncAccountData(false); if (manual && accountUser) showToast('☁️ اكتملت مزامنة الحساب'); }
-
 /* ===== Anonymous cloud sync (secret key, no account) ===== */
 const b64u = a => btoa(String.fromCharCode(...a)).replace(/[+/=]/g, c => ({ '+': '-', '/': '_', '=': '' })[c]);
 let syncKey = localStorage.getItem('chess_sync_key') || b64u(crypto.getRandomValues(new Uint8Array(24)));
@@ -1764,7 +1540,7 @@ try { localStorage.setItem('chess_sync_key', syncKey); } catch (e) {}
 let cloudT = +localStorage.getItem('chess_cloud_t') || 0, cloudTimer = null, cloudFail = 0, cloudBusy = false;
 const schedCloud = () => { clearTimeout(cloudTimer); cloudTimer = setTimeout(() => cloudSync(), 20000); };
 const _sl = saveLearningDB;
-saveLearningDB = function (k, v) { if (!isAi(k) && v && typeof v === 'object') v.t = Date.now(); _sl(k, v); schedCloud(); scheduleAccountSync(); };
+saveLearningDB = function (k, v) { if (!isAi(k) && v && typeof v === 'object') v.t = Date.now(); _sl(k, v); schedCloud(); };
 function mergeCloud(d) {
   let n = 0;
   for (const k in (d.db || {})) if (!(k in learnedDB)) { learnedDB[k] = d.db[k]; dirty[k] = d.db[k]; memN++; n++; }
@@ -1773,7 +1549,6 @@ function mergeCloud(d) {
   if (add.length) putGames([...g, ...add].sort((a, b) => b.date - a.date));
 }
 async function cloudSync(manual) {
-  if (accountUser) { if (manual) return accountSync(true); return; }
   if (cloudBusy || (cloudFail >= 3 && !manual)) return;
   cloudBusy = true; const t0 = Date.now(), up = {};
   for (const k in learnedDB) { const v = learnedDB[k]; if (!isAi(k) && (v.t || 1) > cloudT) up[k] = v; }
@@ -1793,18 +1568,9 @@ function showSyncKey() {
 document.addEventListener('visibilitychange', () => { if (document.hidden) cloudSync(); });
 
 const memReady = loadLearningDB();
-const authQuery = new URLSearchParams(location.search).get('auth');
-if (authQuery) { history.replaceState({}, '', location.pathname); setTimeout(() => showToast(authQuery === 'google_success' ? 'تم تسجيل الدخول باستخدام Google' : authQuery === 'google_link_required' ? 'هذا البريد مرتبط بحساب سابق؛ سجّل الدخول بالبريد أولاً.' : 'تعذّر تسجيل الدخول باستخدام Google'), 800); }
-fetch('/api/auth/me', { credentials:'same-origin', cache:'no-store' }).then(r=>r.json()).then(async d=>{ if (d.user) { renderAccount(d.user); memReady.then(() => syncAccountData(false)); } }).catch(()=>{});
 buildSettingsUI(); initEditPalette(); renderBoard(); updateTurnIndicator(); updateEvalBar(0);
 memReady.then(() => autoEvaluate());
-memReady.then(() => setTimeout(() => { if (accountUser) accountSync(false); else cloudSync(); }, 1500));
-// Keep cloud data current every two minutes while the app is open; local settings remain saved immediately.
-setInterval(() => {
-  if (document.visibilityState !== 'visible') return;
-  if (accountUser) accountSync(false); else cloudSync();
-}, 120000);
-addEventListener('pagehide', () => { if (accountUser) accountSync(false); else cloudSync(); });
+memReady.then(() => setTimeout(cloudSync, 1500));
 if (settings.aiEnabled) setTimeout(maybeAIPlay, 700);
 </script>
 </body>
