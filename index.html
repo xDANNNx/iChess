@@ -1261,6 +1261,27 @@ async function runAutoEval(moveObj, attempt) {
     previousEval = r.evalScore;
   } catch (e) {
     if (game.fen() !== startFen || isEditMode) return;
+    // Keep all move-tier controls useful even if the online analysis service
+    // has no cached evaluation or is temporarily unavailable.
+    try {
+      const legalNow = new Chess(startFen).moves({ verbose: true });
+      if (legalNow.length) {
+        const fallbackUci = legalNow[0].from + legalNow[0].to + (legalNow[0].promotion || '');
+        const fallbackResult = { bestMoveUci: fallbackUci, lines: [] };
+        const candidates = engineArrowCandidates(startFen, fallbackResult);
+        if (game.fen() === startFen && candidates.length) {
+          bestMoveData = {
+            m1: candidates[0]?.uci || fallbackUci,
+            m2: candidates[1]?.uci || null,
+            m3: candidates[2]?.uci || null,
+            arrowCandidates: candidates,
+            src: 'اقتراحات احتياطية',
+            lines: []
+          };
+          drawBestMoveArrows();
+        }
+      }
+    } catch (fallbackError) { console.warn('Local move suggestions:', fallbackError); }
     if (e.message !== 'nodata' && attempt < 2) { clearTimeout(autoEvalTimeout); autoEvalTimeout = setTimeout(() => runAutoEval(moveObj, attempt + 1), 4000 * (attempt + 1)); }
   }
 }
@@ -1813,10 +1834,50 @@ function engineArrowCandidates(fen, result) {
   const best = Math.max(...found.map(x => x.score));
   const unique = [];
   for (const x of found) if (!unique.some(y => y.uci === x.uci)) unique.push(x);
-  return unique.slice(0,3).map((x,i) => ({
+
+  // Cloud engines sometimes return only one PV (or two) for a position.
+  // Fill the remaining visible tiers with distinct legal human-plausible
+  // alternatives, rather than disabling the buttons for the rest of the game.
+  const required = Math.min(3, legal.length);
+  if (unique.length < required) {
+    let alternatives = [];
+    try {
+      const human = humanDist(fen, settings.level || 8, result || { bestMoveUci: unique[0]?.uci, lines: [] }, true) || [];
+      alternatives = human
+        .slice()
+        .sort((a,b) => b.w - a.w)
+        .map(x => ({ uci: x.m.from + x.m.to + (x.m.promotion || ''), score: best - 0.12 - alternatives.length * 0.04, fallback: true }));
+    } catch (e) { /* legal-move fallback below */ }
+    for (const x of alternatives) {
+      if (unique.length >= required) break;
+      if (legalUci(fen, x.uci) && !unique.some(y => y.uci === x.uci)) unique.push(x);
+    }
+  }
+  // Last-resort completion for unusual positions where the human model has
+  // no safe candidate. Keep the engine PVs first and never repeat a move.
+  if (unique.length < required) {
+    const preferred = new Set(unique.map(x => x.uci));
+    const fallback = legal.map(m => ({
+      uci: m.from + m.to + (m.promotion || ''),
+      score: best - 0.3 - (m.captured ? 0 : 0.05),
+      fallback: true,
+      move: m
+    })).filter(x => !preferred.has(x.uci));
+    fallback.sort((a,b) => {
+      const score = x => (x.move.captured ? (PIECE_VALUES[x.move.captured] || 0) * 1.5 : 0)
+        + (x.move.promotion ? 8 : 0) + (x.move.san.includes('+') ? 2 : 0)
+        + (x.move.flags && /[kq]/.test(x.move.flags) ? 1.2 : 0)
+        + (/[de][45]/.test(x.move.to) ? .5 : 0);
+      return score(b) - score(a);
+    });
+    for (const x of fallback) { if (unique.length >= required) break; unique.push(x); }
+  }
+  unique.sort((a,b) => b.score - a.score);
+  return unique.slice(0, required).map((x,i) => ({
     uci: x.uci,
     tier: i === 0 ? 'best' : (i === 1 ? 'second' : 'good'),
-    loss: Math.max(0, best - x.score)
+    loss: Math.max(0, best - x.score),
+    fallback: !!x.fallback
   }));
 }
 
@@ -1953,18 +2014,13 @@ function drawTacticalArrows() {
 let activeArrowTier = 'best';
 function updateMoveTierButtons() {
   const available = { best:false, second:false, good:false };
-  // Keep the primary action available so a failed/missing auto-analysis can be retried.
-  available.best = true;
-  if (bestMoveData) {
-    const candidates = bestMoveData.arrowCandidates || [];
-    if (candidates.length) {
-      available.second = candidates.some(x=>x.tier==='second');
-      available.good = candidates.some(x=>x.tier==='good');
-    } else {
-      available.second = !!bestMoveData.m2;
-      available.good = !!bestMoveData.m3;
-    }
-  }
+  // Availability follows the actual legal move count. The buttons stay
+  // available throughout the game whenever distinct legal alternatives exist.
+  const legalCount = game && !game.game_over() ? game.moves().length : 0;
+  available.best = legalCount > 0;
+  available.second = legalCount > 1;
+  available.good = legalCount > 2;
+  // Do not hide tiers merely because the cloud engine returned fewer PVs.
   [['best','btn-analyze'],['second','btn-tier-second'],['good','btn-tier-good']].forEach(([tier,id])=>{
     const b=$(id); if(!b)return;
     b.disabled = !available[tier];
@@ -1972,14 +2028,41 @@ function updateMoveTierButtons() {
     b.setAttribute('aria-pressed',activeArrowTier===tier?'true':'false');
   });
 }
+function ensureLocalMoveSuggestions() {
+  const fen = game.fen();
+  const legal = new Chess(fen).moves({ verbose: true });
+  if (!legal.length) return false;
+  const required = Math.min(3, legal.length);
+  if (bestMoveData && bestMoveData.arrowCandidates && bestMoveData.arrowCandidates.length >= required) return true;
+  const preferred = bestMoveData && bestMoveData.m1 && legalUci(fen, bestMoveData.m1)
+    ? bestMoveData.m1
+    : legal[0].from + legal[0].to + (legal[0].promotion || '');
+  const stored = learnedDB[getCleanFen()];
+  const result = stored || { bestMoveUci: preferred, lines: [] };
+  if (!result.bestMoveUci || !legalUci(fen, result.bestMoveUci)) result.bestMoveUci = preferred;
+  const candidates = engineArrowCandidates(fen, result);
+  if (!candidates.length) return false;
+  bestMoveData = {
+    ...(bestMoveData || {}),
+    m1: candidates[0].uci,
+    m2: candidates[1]?.uci || null,
+    m3: candidates[2]?.uci || null,
+    arrowCandidates: candidates,
+    src: bestMoveData?.src || 'اقتراحات احتياطية',
+    lines: bestMoveData?.lines || []
+  };
+  drawBestMoveArrows();
+  return true;
+}
 async function selectMoveTier(tier) {
   if (!['best','second','good'].includes(tier)) return;
   triggerHaptic('light');
-  if (!bestMoveData) {
+  if (!bestMoveData || !bestMoveData.arrowCandidates || bestMoveData.arrowCandidates.length < Math.min(3, game.moves().length)) {
     const btn=$(tier==='best'?'btn-analyze':'btn-tier-'+tier);
     if(btn)btn.classList.add('is-loading');
     try { await analyzePosition(); } finally { if(btn)btn.classList.remove('is-loading'); }
   }
+  if (!ensureLocalMoveSuggestions()) return;
   const candidates=bestMoveData && bestMoveData.arrowCandidates || [];
   const fallback={best:bestMoveData&&bestMoveData.m1,second:bestMoveData&&bestMoveData.m2,good:bestMoveData&&bestMoveData.m3};
   const chosen=candidates.find(x=>x.tier===tier);
@@ -2092,6 +2175,7 @@ analyzePosition = async function () {
   if (game.fen() !== snapshot || game.game_over()) return;
   const result = learnedDB[getCleanFen()];
   if (result && bestMoveData) bestMoveData.arrowCandidates = engineArrowCandidates(snapshot, result);
+  if (!bestMoveData || !bestMoveData.arrowCandidates || bestMoveData.arrowCandidates.length < Math.min(3, game.moves().length)) ensureLocalMoveSuggestions();
   drawBestMoveArrows();
   updateMoveTierButtons();
   await renderOpeningInsights(snapshot, token);
