@@ -482,6 +482,7 @@ const LEVELS = [
   [4,  'متوسط',  '~1200 Elo | يخطئ أحياناً',         4],
   [8,  'جيد',    '~1600 Elo | زلّات نادرة',         8],
   [12, 'محترف',  '~2000 Elo | دقيق جداً',        12],
+  [16, 'إنسان',  'سلوك بشري متنوع | لا يختار أفضل نقلة دائماً (حد 88%)', 10],
   [18, 'خبير',   '~2400 Elo | قريب من المحترفين',   18]
 ];
 
@@ -996,7 +997,6 @@ function getCurrentPhase() {
   if (totalMaterial <= 16 || (queens === 0 && totalMaterial <= 26)) return 'e';
   return moveCount <= 10 && totalMaterial >= 50 ? 'o' : 'm';
 }
-
 function updatePhaseDisplay() {
   renderMoveHistory();
   const phase = getCurrentPhase();
@@ -1321,7 +1321,7 @@ function getAIConfig(level) {
 }
 
 /* ===== Human-like opponent: level-based natural mistakes, varied choices, human think-time ===== */
-const HUMAN = { 1: { T: 1.6, err: .25 }, 2: { T: 1.0, err: .15 }, 4: { T: .6, err: .08 }, 8: { T: .35, err: .04 }, 12: { T: .2, err: .015 }, 18: { T: .1, err: .005 } };
+const HUMAN = { 1: { T: 1.6, err: .25 }, 2: { T: 1.0, err: .15 }, 4: { T: .6, err: .08 }, 8: { T: .35, err: .04 }, 12: { T: .2, err: .015 }, 16: { T: .48, err: .12 }, 18: { T: .1, err: .005 } };
 const pickW = a => { let r = Math.random() * a.reduce((t, x) => t + x.w, 0); for (const x of a) { r -= x.w; if (r <= 0) return x; } return a[a.length - 1]; };
 function humanDist(fen, level, r, det) {   // probability of each move being played by a human of this level
   const g = new Chess(fen), cfg = HUMAN[level] || HUMAN[18], sgn = g.turn() === 'w' ? 1 : -1, legal = g.moves({ verbose: true });
@@ -1344,7 +1344,24 @@ function humanDist(fen, level, r, det) {   // probability of each move being pla
   }).map(x => ({ m: x.m, w: Math.exp(x.s / 1.2) }));
   if (!c.length) return pool;
   const ct = c.reduce((t, x) => t + x.w, 0); c.forEach(x => x.w = x.w / ct * pe); pool.forEach(x => x.w *= 1 - pe);
-  return pool.concat(c);
+  const distribution = pool.concat(c);
+  // The dedicated Human level must not behave like a perfect engine:
+  // cap the probability of selecting the engine's #1 move at 88%,
+  // redistributing the remaining probability to distinct legal alternatives.
+  if (level === 16 && distribution.length > 1) {
+    const bestUci = r && r.bestMoveUci;
+    const best = distribution.find(x => bestUci && x.m.from + x.m.to + (x.m.promotion || '') === bestUci);
+    if (best) {
+      const otherTotal = distribution.reduce((sum, x) => sum + (x === best ? 0 : x.w), 0);
+      if (otherTotal > 0) {
+        const capped = Math.min(best.w, .88);
+        const remainder = Math.max(0, 1 - capped);
+        best.w = capped;
+        distribution.forEach(x => { if (x !== best) x.w = x.w / otherTotal * remainder; });
+      }
+    }
+  }
+  return distribution;
 }
 function humanMove(fen, level, r) {
   const d = humanDist(fen, level, r, false);
@@ -1979,8 +1996,7 @@ function drawTacticalArrows() {
     if(t==='n')return(adf===1&&adr===2)||(adf===2&&adr===1);
     if(t==='k')return Math.max(adf,adr)===1;
     if(t==='b'&&adf!==adr)return false;
-    if(t==='r'&&!(df===0||dr===0))return false;
-    if(t==='q'&&!(df===0||dr===0||adf===adr))return false;
+    if(t==='r'&&!(df===0||dr===0))return false;    if(t==='q'&&!(df===0||dr===0||adf===adr))return false;
     if(!['b','r','q'].includes(t))return false;
     const sf=Math.sign(df),sr=Math.sign(dr);let f=ff+sf,r=fr+sr;
     while(f!==tf||r!==tr){if(pieceAt(f,r))return false;f+=sf;r+=sr;}
@@ -2185,6 +2201,19 @@ analyzePosition = async function () {
 /* AI uses the same master opening database for either colour, then falls back to its existing repertoire/engine. */
 const _getAIMoveTwoSided = getAIMove;
 getAIMove = async function (fen, level) {
+  // Human mode deliberately bypasses deterministic opening-book replies.
+  // It samples from the same legal, human-weighted move model as the rest of the game.
+  if (level === 16) {
+    const parts = fen.split(' '); parts[2] = '-'; parts[3] = '-';
+    try {
+      const analysis = await getAnalysis(parts.join(' '), 12);
+      if (game.fen() !== fen || !analysis || !legalUci(fen, analysis.bestMoveUci)) return null;
+      return humanMove(fen, level, analysis);
+    } catch (e) {
+      console.warn('Human level analysis unavailable:', e.message);
+      return null;
+    }
+  }
   if (settings.openingBook && Number(fen.split(' ')[5] || 1) <= 18) {
     const london = londonMove(fen);
     if (london) return london;
